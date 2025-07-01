@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 
 export default function Home() {
   useEffect(() => {
-    document.body.style.backgroundColor = '#5a43c7'; // Optional if you want a fallback background
     return () => {
       document.body.style.backgroundColor = '';
     };
