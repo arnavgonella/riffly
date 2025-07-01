@@ -63,7 +63,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: '100%',
     objectFit: 'cover',
     zIndex: 0,
-    opacity: 0.1,
+    opacity: 0.5,
   },
   overlay: {
     position: 'fixed',
@@ -72,7 +72,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: 0,
     bottom: 0,
     backgroundColor: '#5a43c7',
-    opacity: 0.05,
+    opacity: 0.01,
     zIndex: 1,
   },
   message: {
