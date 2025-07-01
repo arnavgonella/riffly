@@ -15,7 +15,7 @@ export default function Home() {
         alt="Riffly Logo"
         width={160}
         height={160}
-        style={{ zIndex: 2, borderRadius: '16px' }}
+        style={{ zIndex: 2, borderRadius: '24px' }}
       />
 
       <div style={styles.messageContainer}>
