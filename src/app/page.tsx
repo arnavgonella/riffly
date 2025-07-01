@@ -33,7 +33,7 @@ export default function Home() {
         height={160}
         style={{ zIndex: 2 }}
       />
-      <div style={styles.message}>Coming soon on the App Store 🎵</div>
+      <div style={styles.message}>Riffly is coming soon to the App Store!</div>
     </div>
   );
 }
@@ -63,7 +63,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: '100%',
     objectFit: 'cover',
     zIndex: 0,
-    opacity: 0.5,
+    opacity: 0.3,
   },
   overlay: {
     position: 'fixed',
@@ -72,7 +72,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: 0,
     bottom: 0,
     backgroundColor: '#5a43c7',
-    opacity: 0.01,
+    opacity: 0.001,
     zIndex: 1,
   },
   message: {
