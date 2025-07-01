@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 export default function Home() {
   useEffect(() => {
-    document.body.style.backgroundColor = '#5a43c7';
+    document.body.style.backgroundColor = '#5a43c7'; // Optional if you want a fallback background
     return () => {
       document.body.style.backgroundColor = '';
     };
@@ -17,8 +17,6 @@ export default function Home() {
         <source src="/waveform.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-
-      <div style={styles.overlay}></div>
 
       <Image
         src="/riffly-logo.png"
@@ -60,16 +58,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     objectFit: 'cover',
     zIndex: 0,
     opacity: 0.3,
-  },
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#5a43c7',
-    opacity: 0,
-    zIndex: 1,
   },
   messageContainer: {
     marginTop: 20,
