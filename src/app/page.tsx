@@ -1,15 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect } from 'react';
 
 export default function Home() {
-  useEffect(() => {
-    return () => {
-      document.body.style.backgroundColor = '';
-    };
-  }, []);
-
   return (
     <div style={styles.container}>
       <video autoPlay muted loop playsInline style={styles.video}>
@@ -38,7 +31,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     height: '100vh',
     width: '100%',
     overflow: 'hidden',
-    backgroundColor: '#5a43c7',
     color: 'white',
     fontFamily: 'Segoe UI, sans-serif',
     display: 'flex',
@@ -47,6 +39,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     position: 'relative',
     textAlign: 'center',
+    backgroundColor: 'black', // fallback behind video, no purple
   },
   video: {
     position: 'fixed',
@@ -56,7 +49,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: '100%',
     objectFit: 'cover',
     zIndex: 0,
-    opacity: 0.3,
+    opacity: 0.5,
   },
   messageContainer: {
     marginTop: 20,
