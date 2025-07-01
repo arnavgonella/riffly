@@ -68,7 +68,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: 0,
     bottom: 0,
     backgroundColor: '#5a43c7',
-    opacity: 0.001,
+    opacity: 0,
     zIndex: 1,
   },
   messageContainer: {
