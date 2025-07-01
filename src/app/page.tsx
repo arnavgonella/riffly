@@ -63,7 +63,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: '100%',
     objectFit: 'cover',
     zIndex: 0,
-    opacity: 0.3,
+    opacity: 0.1,
   },
   overlay: {
     position: 'fixed',
