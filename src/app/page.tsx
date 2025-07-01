@@ -13,13 +13,7 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={styles.video}
-      >
+      <video autoPlay muted loop playsInline style={styles.video}>
         <source src="/waveform.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
@@ -33,7 +27,11 @@ export default function Home() {
         height={160}
         style={{ zIndex: 2 }}
       />
-      <div style={styles.message}>Riffly is coming soon to the App Store!</div>
+
+      <div style={styles.messageContainer}>
+        <div style={styles.title}>Riffly</div>
+        <div style={styles.subtitle}>Coming soon to the App Store!</div>
+      </div>
     </div>
   );
 }
@@ -46,8 +44,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: '#5a43c7',
     color: 'white',
     fontFamily: 'Segoe UI, sans-serif',
-    fontSize: '1.8rem',
-    fontWeight: 600,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -75,8 +71,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     opacity: 0.001,
     zIndex: 1,
   },
-  message: {
+  messageContainer: {
     marginTop: 20,
     zIndex: 2,
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: '2.5rem',
+    fontWeight: 700,
+  },
+  subtitle: {
+    fontSize: '1.2rem',
+    fontWeight: 400,
+    marginTop: '6px',
+    color: '#ddd',
   },
 };
