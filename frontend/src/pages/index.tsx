@@ -42,9 +42,11 @@ export default function Home() {
         setDownloadLink(data.download);
       } else {
         alert('⚠️ Upload failed or backend error.');
+        console.error('Backend responded without "download":', data);
       }
-    } catch {
+    } catch (err) {
       alert('❌ Upload failed. Check backend or file format.');
+      console.error('❌ Upload error:', err);
     }
 
     setLoading(false);
