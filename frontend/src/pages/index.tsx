@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
-// Load react-mic dynamically (only runs in browser)
+interface RecordedBlob {
+  blob: Blob;
+}
+
 const ReactMic = dynamic(() => import('react-mic').then(mod => mod.ReactMic), {
   ssr: false,
 });
 
 export default function Home() {
   const [recording, setRecording] = useState(false);
-  const [blob, setBlob] = useState<Blob | null>(null);
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,9 +23,8 @@ export default function Home() {
     setRecording(false);
   };
 
-  const onStop = async (recordedBlob: any) => {
+  const onStop = async (recordedBlob: RecordedBlob) => {
     console.log('🔊 Stopped. Sending blob to backend...');
-    setBlob(recordedBlob.blob);
     setLoading(true);
 
     const formData = new FormData();
@@ -42,7 +43,7 @@ export default function Home() {
       } else {
         alert('⚠️ Upload failed or backend error.');
       }
-    } catch (err) {
+    } catch {
       alert('❌ Upload failed. Check backend or file format.');
     }
 
@@ -102,7 +103,7 @@ export default function Home() {
         <div style={{ marginTop: '1.5rem' }}>
           <p style={{ color: 'green', fontWeight: 500 }}>✅ Inspection complete!</p>
           <a
-            href={`http://localhost:3001/uploads/${downloadLink}`}
+            href={`https://riffly-backend.onrender.com/uploads/${downloadLink}`}
             download
             style={{ color: '#2563eb', textDecoration: 'underline' }}
           >
