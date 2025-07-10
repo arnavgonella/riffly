@@ -51,30 +51,19 @@ async function transcribeAndParse(filePath) {
 
   const parsed = [];
 
-  // Match all part numbers like "part 318-02.03a"
-  const partMatches = [...rawText.matchAll(/part\s+([a-zA-Z0-9\-\.]+)/gi)];
+  // Pattern: match any mention of a part number
+  const partPattern = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
+  const dimensionPattern = /(\d+(\.\d+)?)\s*(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)/gi;
 
-  // Match all dimensions like "dimension 3" or "3 millimeters"
-  const dimMatches = [...rawText.matchAll(/dimension\s+(\d+(\.\d+)?)/gi)];
+  const parts = [...rawText.matchAll(partPattern)];
+  const dims = [...rawText.matchAll(dimensionPattern)];
 
-  for (let i = 0; i < Math.min(partMatches.length, dimMatches.length); i++) {
-    const part = partMatches[i][1];
-    const measured = dimMatches[i][1];
+  for (let i = 0; i < Math.min(parts.length, dims.length); i++) {
+    const part = parts[i][1];
+    const measured = dims[i][1];
+    const unitRaw = dims[i][3];
 
-    // Look for unit within ±50 characters of the match
-    const dimIndex = dimMatches[i].index;
-    const surrounding = rawText.slice(
-      Math.max(0, dimIndex - 50),
-      dimIndex + 50
-    );
-
-    const unitRegex = new RegExp(
-      "\\b(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)\\b",
-      "i"
-    );
-
-    const unitMatch = surrounding.match(unitRegex);
-    const unit = unitMatch ? normalizeUnit(unitMatch[0]) : '';
+    const unit = normalizeUnit(unitRaw);
 
     parsed.push({ part, measured, unit });
   }
