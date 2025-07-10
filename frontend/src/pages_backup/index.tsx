@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import axios from "axios";
+
+interface Riff {
+  id: number;
+  username: string;
+  caption: string;
+  url: string;
+}
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [username, setUsername] = useState("");
   const [caption, setCaption] = useState("");
-  const [riffs, setRiffs] = useState<any[]>([]);
+  const [riffs, setRiffs] = useState<Riff[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -21,7 +28,7 @@ export default function Home() {
     }
   }
 
-  async function handleUpload(e: React.FormEvent) {
+  async function handleUpload(e: FormEvent) {
     e.preventDefault();
     if (!file) return alert("Please select a file");
 
@@ -32,9 +39,7 @@ export default function Home() {
     formData.append("caption", caption);
 
     try {
-      await axios.post("http://localhost:3001/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post("http://localhost:3001/upload", formData);
       setFile(null);
       setUsername("");
       setCaption("");
@@ -43,6 +48,7 @@ export default function Home() {
       alert("Upload failed");
       console.error(error);
     }
+
     setLoading(false);
   }
 
@@ -53,7 +59,9 @@ export default function Home() {
         <input
           type="file"
           accept="audio/*"
-          onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setFile(e.target.files ? e.target.files[0] : null)
+          }
           disabled={loading}
           required
         />
@@ -98,4 +106,3 @@ export default function Home() {
     </main>
   );
 }
-
