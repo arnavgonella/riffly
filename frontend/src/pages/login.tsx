@@ -34,7 +34,7 @@ export default function LoginPage() {
     <div className="p-6 max-w-md mx-auto mt-20 text-center">
       <h1 className="text-2xl font-bold mb-4">Login to Riffly</h1>
       {sent ? (
-        <p className="text-green-600">✅ Magic link sent to <b>{email}</b></p>
+        <p className="text-green-600">✅ Login link sent to <b>{email}</b></p>
       ) : (
         <>
           <input
