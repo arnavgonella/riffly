@@ -13,10 +13,16 @@ export default function LoginPage() {
     if (session) {
       router.push("/");
     }
-  }, [session]);
+  }, [session, router]);
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: "https://rifflyhq.com", 
+      },
+    });
+
     if (error) {
       alert("Error sending magic link: " + error.message);
     } else {
