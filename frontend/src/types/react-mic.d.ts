@@ -1,13 +1,13 @@
-declare module 'react-mic' {
-  import * as React from 'react';
+declare module "react-mic" {
+  import React from "react";
 
   export interface ReactMicProps {
     record: boolean;
     className?: string;
     onStop: (recordedBlob: { blob: Blob }) => void;
+    mimeType?: string;
     strokeColor?: string;
     backgroundColor?: string;
-    mimeType?: string;
   }
 
   export const ReactMic: React.FC<ReactMicProps>;

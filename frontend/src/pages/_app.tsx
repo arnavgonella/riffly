@@ -1,20 +1,20 @@
-// riffly/frontend/src/pages/_app.tsx
+import type { AppProps } from "next/app";
+import Head from "next/head";
+import "../styles/globals.css";
 
-import type { AppProps } from 'next/app';
-import Head from 'next/head';
-import '../styles/globals.css'; // adjust or remove if not using global styles
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { supabase } from "@lib/supabaseClient";
 
-function MyApp({ Component, pageProps }: AppProps) {
+export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
         <title>Riffly</title>
         <link rel="icon" href="/favicon.ico" />
-        {/* You can also use PNG: <link rel="icon" type="image/png" href="/favicon.png" /> */}
       </Head>
-      <Component {...pageProps} />
+      <SessionContextProvider supabaseClient={supabase}>
+        <Component {...pageProps} />
+      </SessionContextProvider>
     </>
   );
 }
-
-export default MyApp;

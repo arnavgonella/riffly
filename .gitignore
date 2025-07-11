@@ -181,3 +181,5 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+frontend/.env.local
+backend/.env
