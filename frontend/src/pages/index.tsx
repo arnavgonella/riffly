@@ -10,10 +10,8 @@ export default function Home() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (session) {
-      router.push("/dashboard");
-    }
-  }, [session]);
+    if (!session) router.push("/login");
+  }, [session, router]);
 
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithOtp({ email });

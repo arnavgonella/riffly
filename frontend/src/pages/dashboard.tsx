@@ -3,7 +3,6 @@ import { useSession, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { supabase } from "@lib/supabaseClient";
 
 const ReactMic = dynamic(() => import("react-mic").then((mod) => mod.ReactMic), {
   ssr: false,
@@ -23,10 +22,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/login");
-    }
-  }, [session]);
+    if (!session) router.push("/login");
+  }, [session, router]);
 
   const startRecording = () => {
     setRecording(true);
