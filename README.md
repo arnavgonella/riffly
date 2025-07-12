@@ -17,7 +17,7 @@ Riffly is an AI-native workflow tool for manufacturing quality control. It lets 
    ```
 3. Provide environment variables:
    - `backend/.env` – requires `OPENAI_API_KEY` for transcription.
-   - `frontend/.env.local` – requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+   - `frontend/.env.local` – requires `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_BACKEND_URL` (defaults to `http://localhost:3001`).
 4. Run the development servers in separate terminals:
    ```bash
    # Backend

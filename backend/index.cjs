@@ -50,8 +50,7 @@ app.post('/upload', async (req, res) => {
 
 app.post('/annotate', async (req, res) => {
   const userId = req.body.userId;
-  if (!userId)
-    return res.status(400).json({ error: 'Missing userId' });
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
   if (!req.files || !req.files.audio || !req.files.excel) {
     return res.status(400).json({ error: 'Audio and Excel files required.' });
   }

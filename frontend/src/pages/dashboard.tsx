@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useAudioRecorder from "@/lib/useAudioRecorder";
 
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 export default function Dashboard() {
   const session = useSession();
   const user = useUser();
@@ -33,15 +35,16 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch("https://riffly-backend.onrender.com/upload", {
+      const res = await fetch(`${API_BASE}/upload`, {
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Upload failed");
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
-    } catch {
-      alert("⚠️ Upload failed");
+    } catch (err) {
+      alert(`⚠️ ${(err as Error).message}`);
     }
     setLoading(false);
   };
@@ -55,22 +58,23 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch("https://riffly-backend.onrender.com/annotate", {
+      const res = await fetch(`${API_BASE}/annotate`, {
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Upload failed");
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
-    } catch {
-      alert("⚠️ Upload failed");
+    } catch (err) {
+      alert(`⚠️ ${(err as Error).message}`);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     if (!user) return;
-    fetch(`https://riffly-backend.onrender.com/files/${user.id}`)
+    fetch(`${API_BASE}/files/${user.id}`)
       .then((r) => r.json())
       .then((d) => setHistory(d.files ?? []))
       .catch(() => setHistory([]));
@@ -140,7 +144,7 @@ export default function Dashboard() {
         <div className="mt-6">
           <p className="text-green-600 font-semibold">✅ Inspection complete!</p>
           <a
-            href={`https://riffly-backend.onrender.com/uploads/${downloadLink}`}
+            href={`${API_BASE}/uploads/${downloadLink}`}
             download
             className="text-blue-600 underline"
           >
@@ -156,7 +160,7 @@ export default function Dashboard() {
             {history.map((f) => (
               <li key={f} className="my-1">
                 <a
-                  href={`https://riffly-backend.onrender.com/uploads/${f}`}
+                  href={`${API_BASE}/uploads/${f}`}
                   download
                   className="text-blue-600 underline"
                 >
