@@ -100,10 +100,13 @@ async function annotateChecklist(originalPath, data, originalName = null) {
   let tolCol = null;
   sheet.getRow(1).eachCell((cell, col) => {
     const header = String(cell.value || '').toLowerCase();
+
+    if (header.includes('recorded') || header.includes('comment')) return;
+
     if (header.includes('part')) partCol = col;
-    if (header.match(/dimension|target|nominal|value/)) dimCol = col;
-    if (header.includes('unit')) unitCol = col;
-    if (header.match(/tolerance|allowable/)) tolCol = col;
+    if (!dimCol && header.match(/dimension|target|nominal|value/)) dimCol = col;
+    if (!unitCol && header.includes('unit')) unitCol = col;
+    if (!tolCol && header.match(/tolerance|allowable/)) tolCol = col;
   });
 
   const getUnitFromHeader = () => {
@@ -145,6 +148,8 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             if (measured < lower || measured > upper) {
               const diff = measured < lower ? lower - measured : measured - upper;
               sheet.getRow(i).getCell(startCol + 2).value = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
+            } else {
+              sheet.getRow(i).getCell(startCol + 2).value = 'In spec';
             }
           }
         }
