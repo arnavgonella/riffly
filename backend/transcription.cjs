@@ -166,6 +166,26 @@ function wordsToNumber(str) {
   return result;
 }
 
+function parseNumericSlice(slice) {
+  if (!slice) return NaN;
+  const replaced = slice.replace(/(?:point|dot)/gi, '.');
+  const digits = replaced.match(/-?\d+(?:\.\d+)?/);
+  let result = digits ? parseFloat(digits[0]) : NaN;
+  if (!isNaN(result)) {
+    const after = replaced.slice(digits.index + digits[0].length);
+    const frac = after.match(/(\d+)\/(\d+)/);
+    if (frac) {
+      result += parseInt(frac[1]) / parseInt(frac[2]);
+    } else if (/half/i.test(after)) {
+      result += 0.5;
+    } else if (/quarter/i.test(after)) {
+      result += 0.25;
+    }
+    return result;
+  }
+  return wordsToNumber(slice);
+}
+
 function parseTranscript(rawText) {
   const results = [];
 
@@ -199,8 +219,7 @@ function parseTranscript(rawText) {
       }
     }
     const slice = look.join(' ');
-    const numMatch = slice.match(/-?\d+(?:\.\d+)?/);
-    const measured = numMatch ? parseFloat(numMatch[0]) : wordsToNumber(slice);
+    const measured = parseNumericSlice(slice);
 
     results.push({ part: parts[i].part, measured, unit });
   }
