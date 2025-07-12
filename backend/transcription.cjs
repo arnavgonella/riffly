@@ -46,34 +46,19 @@ function normalizeUnit(text) {
 }
 
 function convertUnit(value, from, to) {
-  const LENGTH_FACTORS = {
-    mm: 0.001,
-    cm: 0.01,
-    m: 1,
-    in: 0.0254,
-    ft: 0.3048,
-  };
-  const MASS_FACTORS = {
-    g: 1,
-    kg: 1000,
-    lbs: 453.592,
-  };
-
+  const LENGTH_FACTORS = { mm: 0.001, cm: 0.01, m: 1, in: 0.0254, ft: 0.3048 };
+  const MASS_FACTORS = { g: 1, kg: 1000, lbs: 453.592 };
   const f = normalizeUnit(from);
   const t = normalizeUnit(to);
-
   if (f === t) return value;
-
   if (LENGTH_FACTORS[f] && LENGTH_FACTORS[t]) {
     const meters = value * LENGTH_FACTORS[f];
     return meters / LENGTH_FACTORS[t];
   }
-
   if (MASS_FACTORS[f] && MASS_FACTORS[t]) {
     const grams = value * MASS_FACTORS[f];
     return grams / MASS_FACTORS[t];
   }
-
   return value;
 }
 
