@@ -45,6 +45,45 @@ function normalizeUnit(text) {
   return UNIT_MAP[cleaned] || cleaned;
 }
 
+function convertUnit(value, from, to) {
+  const LENGTH_FACTORS = {
+    mm: 0.001,
+    cm: 0.01,
+    m: 1,
+    in: 0.0254,
+    ft: 0.3048,
+  };
+  const MASS_FACTORS = {
+    g: 1,
+    kg: 1000,
+    lbs: 453.592,
+  };
+
+  const f = normalizeUnit(from);
+  const t = normalizeUnit(to);
+
+  if (f === t) return value;
+
+  if (LENGTH_FACTORS[f] && LENGTH_FACTORS[t]) {
+    const meters = value * LENGTH_FACTORS[f];
+    return meters / LENGTH_FACTORS[t];
+  }
+
+  if (MASS_FACTORS[f] && MASS_FACTORS[t]) {
+    const grams = value * MASS_FACTORS[f];
+    return grams / MASS_FACTORS[t];
+  }
+
+  return value;
+}
+
+function parseNumber(val) {
+  if (val == null) return NaN;
+  if (typeof val === 'number') return val;
+  const match = String(val).match(/-?\d+(\.\d+)?/);
+  return match ? parseFloat(match[0]) : NaN;
+}
+
 function parseTranscript(rawText) {
   const parsed = [];
 
@@ -56,7 +95,7 @@ function parseTranscript(rawText) {
 
   for (let i = 0; i < Math.min(parts.length, dims.length); i++) {
     const part = parts[i][1];
-    const measured = dims[i][1];
+    const measured = parseFloat(dims[i][1]);
     const unitRaw = dims[i][3];
 
     const unit = normalizeUnit(unitRaw);
@@ -85,7 +124,7 @@ async function transcribeAndParse(filePath) {
   return checklistPath;
 }
 
-async function transcribeAndAnnotate(audioPath, excelPath) {
+async function transcribeAndAnnotate(audioPath, excelPath, originalName) {
   console.log('🔊 Received files:', audioPath, excelPath);
 
   const transcription = await openai.audio.transcriptions.create({
@@ -99,7 +138,7 @@ async function transcribeAndAnnotate(audioPath, excelPath) {
   const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
 
-  const annotatedPath = await annotateChecklist(excelPath, parsed);
+  const annotatedPath = await annotateChecklist(excelPath, parsed, originalName);
   return annotatedPath;
 }
 
