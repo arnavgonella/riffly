@@ -25,4 +25,42 @@ async function createChecklist(data) {
   return path.basename(filePath);
 }
 
-module.exports = { createChecklist };
+async function annotateChecklist(originalPath, data) {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(originalPath);
+
+  const sheet = workbook.worksheets[0];
+
+  const startCol = sheet.columnCount + 1;
+  sheet.getRow(1).getCell(startCol).value = 'Recorded Value';
+  sheet.getRow(1).getCell(startCol + 1).value = 'Recorded Unit';
+
+  data.forEach((entry) => {
+    for (let i = 2; i <= sheet.rowCount; i++) {
+      const cell = sheet.getRow(i).getCell(1).value;
+      if (
+        cell &&
+        String(cell).trim().toLowerCase() ===
+          String(entry.part).trim().toLowerCase()
+      ) {
+        sheet.getRow(i).getCell(startCol).value = entry.measured;
+        sheet.getRow(i).getCell(startCol + 1).value = entry.unit;
+        break;
+      }
+    }
+  });
+
+  const date = new Date().toLocaleDateString('en-US').replace(/\//g, '-');
+  const baseName = path.basename(originalPath);
+  const filePath = path.join(
+    __dirname,
+    'uploads',
+    `annotated_${date}_${baseName}`
+  );
+
+  await workbook.xlsx.writeFile(filePath);
+  console.log('✅ Annotated Excel created at:', filePath);
+  return path.basename(filePath);
+}
+
+module.exports = { createChecklist, annotateChecklist };

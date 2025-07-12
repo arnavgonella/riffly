@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const fs = require('fs');
 const path = require('path');
-const { transcribeAndParse } = require('./transcription.cjs');
+const { transcribeAndParse, transcribeAndAnnotate } = require('./transcription.cjs');
 const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
 
 const app = express();
@@ -48,6 +48,37 @@ app.post('/upload', async (req, res) => {
   } catch (err) {
     console.error('❌ Upload or processing failed:', err);
     res.status(500).json({ error: 'Failed to process file.' });
+  }
+});
+
+app.post('/annotate', async (req, res) => {
+  const userId = req.body.userId;
+  if (!userId)
+    return res.status(400).json({ error: 'Missing userId' });
+  if (!req.files || !req.files.audio || !req.files.excel) {
+    return res.status(400).json({ error: 'Audio and Excel files required.' });
+  }
+
+  const audioFile = req.files.audio;
+  const excelFile = req.files.excel;
+
+  const audioExt = path.extname(audioFile.name) || '.webm';
+  const audioName = `audio_${Date.now()}${audioExt}`;
+  const audioPath = path.join(uploadDir, audioName);
+
+  const excelExt = path.extname(excelFile.name) || '.xlsx';
+  const excelName = `excel_${Date.now()}${excelExt}`;
+  const excelPath = path.join(uploadDir, excelName);
+
+  try {
+    await audioFile.mv(audioPath);
+    await excelFile.mv(excelPath);
+    const annotated = await transcribeAndAnnotate(audioPath, excelPath);
+    await addFile(userId, path.basename(annotated));
+    res.json({ download: path.basename(annotated) });
+  } catch (err) {
+    console.error('❌ Annotation failed:', err);
+    res.status(500).json({ error: 'Failed to annotate.' });
   }
 });
 
