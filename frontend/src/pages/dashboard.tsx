@@ -33,10 +33,10 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch(
-        "https://riffly-backend.onrender.com/upload",
-        { method: "POST", body: formData }
-      );
+      const res = await fetch("https://riffly-backend.onrender.com/upload", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
@@ -46,7 +46,7 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const handleAnnotate = async () => {
+  const handleAnnotateUpload = async () => {
     if (!mediaBlob || !user || !excelFile) return;
     setLoading(true);
     const formData = new FormData();
@@ -55,10 +55,10 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch(
-        "https://riffly-backend.onrender.com/annotate",
-        { method: "POST", body: formData }
-      );
+      const res = await fetch("https://riffly-backend.onrender.com/annotate", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
@@ -125,7 +125,7 @@ export default function Dashboard() {
             ⬆️ Upload & Generate Excel
           </button>
           <button
-            onClick={handleAnnotate}
+            onClick={handleAnnotateUpload}
             disabled={!excelFile}
             className="bg-green-600 text-white px-6 py-3 rounded w-full"
           >
