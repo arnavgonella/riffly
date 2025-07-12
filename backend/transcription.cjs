@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { OpenAI } = require('openai');
-const { createChecklist } = require('./checklist.cjs');
+const { createChecklist, annotateChecklist } = require('./checklist.cjs');
 
 // Polyfill global File/Blob for Node <20 so openai uploads work
 if (typeof global.File === 'undefined') {
@@ -45,20 +45,9 @@ function normalizeUnit(text) {
   return UNIT_MAP[cleaned] || cleaned;
 }
 
-async function transcribeAndParse(filePath) {
-  console.log('🔊 Received file:', filePath);
-
-  const transcription = await openai.audio.transcriptions.create({
-    file: fs.createReadStream(filePath),
-    model: 'whisper-1',
-  });
-
-  const rawText = transcription.text.trim();
-  console.log('📝 Transcript:', rawText);
-
+function parseTranscript(rawText) {
   const parsed = [];
 
-  // Pattern: match any mention of a part number
   const partPattern = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
   const dimensionPattern = /(\d+(\.\d+)?)\s*(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)/gi;
 
@@ -75,10 +64,43 @@ async function transcribeAndParse(filePath) {
     parsed.push({ part, measured, unit });
   }
 
+  return parsed;
+}
+
+async function transcribeAndParse(filePath) {
+  console.log('🔊 Received file:', filePath);
+
+  const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(filePath),
+    model: 'whisper-1',
+  });
+
+  const rawText = transcription.text.trim();
+  console.log('📝 Transcript:', rawText);
+
+  const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
 
   const checklistPath = await createChecklist(parsed);
   return checklistPath;
 }
 
-module.exports = { transcribeAndParse };
+async function transcribeAndAnnotate(audioPath, excelPath) {
+  console.log('🔊 Received files:', audioPath, excelPath);
+
+  const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(audioPath),
+    model: 'whisper-1',
+  });
+
+  const rawText = transcription.text.trim();
+  console.log('📝 Transcript:', rawText);
+
+  const parsed = parseTranscript(rawText);
+  console.log('📋 Parsed result:', parsed);
+
+  const annotatedPath = await annotateChecklist(excelPath, parsed);
+  return annotatedPath;
+}
+
+module.exports = { transcribeAndParse, transcribeAndAnnotate };
