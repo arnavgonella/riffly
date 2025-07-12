@@ -22,6 +22,9 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+// Remove expired files on startup
+cleanupOldFiles();
+
 app.post('/upload', async (req, res) => {
   const userId = req.body.userId;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
@@ -39,7 +42,6 @@ app.post('/upload', async (req, res) => {
     await audioFile.mv(savePath);
     const checklistFile = await transcribeAndParse(savePath);
     await addFile(userId, path.basename(checklistFile));
-
     res.json({ download: path.basename(checklistFile) });
   } catch (err) {
     console.error('❌ Upload or processing failed:', err);

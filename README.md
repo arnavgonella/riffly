@@ -29,3 +29,7 @@ Riffly is an AI-native workflow tool for manufacturing quality control. It lets 
    The frontend defaults to `http://localhost:3000` and the backend to `http://localhost:3001`.
 
 Recorded audio uploaded from the dashboard page will generate Excel files in `backend/uploads` that can be downloaded from the UI.
+
+The backend stores a small record of generated files in `backend/files.json`. Each
+entry is tied to the authenticated user ID so the dashboard can list your past
+reports. Entries and their files are automatically removed after one week.
