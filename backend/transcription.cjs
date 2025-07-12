@@ -183,7 +183,6 @@ function parseTranscript(rawText) {
       measured = wordsToNumber(numStr);
     }
     const unitRaw = dims[i][2];
-
     const unit = normalizeUnit(unitRaw);
 
     parsed.push({ part, measured, unit });

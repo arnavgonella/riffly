@@ -86,6 +86,20 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
+      {!downloadLink && (
+        <div className="mb-4">
+          <label className="block text-left mb-1 font-medium">
+            Excel file to annotate (optional):
+          </label>
+          <input
+            type="file"
+            accept=".xlsx"
+            onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+            className="block w-full border p-2"
+          />
+        </div>
+      )}
+
       {!isRecording ? (
         <button
           onClick={() => {
