@@ -6,6 +6,7 @@ dotenv.config();
 const fs = require('fs');
 const path = require('path');
 const { transcribeAndParse } = require('./transcription.cjs');
+const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
 
 
 
@@ -23,7 +24,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+// Remove expired files on startup
+cleanupOldFiles();
+
 app.post('/upload', async (req, res) => {
+  const userId = req.body.userId;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
   if (!req.files || !req.files.audio) {
     return res.status(400).json({ error: 'No audio file uploaded.' });
   }
@@ -36,13 +42,27 @@ app.post('/upload', async (req, res) => {
 
   try {
     await audioFile.mv(savePath);
-    const checklistPath = await transcribeAndParse(savePath);
-
-    // Send filename only (for frontend to download)
-    res.json({ download: path.basename(checklistPath) });
+    const checklistFile = await transcribeAndParse(savePath);
+    await addFile(userId, path.basename(checklistFile));
+    cleanupOldFiles();
+    res.json({ download: path.basename(checklistFile) });
   } catch (err) {
     console.error('❌ Upload or processing failed:', err);
     res.status(500).json({ error: 'Failed to process file.' });
+  }
+});
+
+app.get('/files/:userId', async (req, res) => {
+  try {
+    cleanupOldFiles();
+    const rows = await getFiles(req.params.userId);
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const files = rows
+      .filter((r) => r.createdAt >= cutoff)
+      .map((r) => r.fileName);
+    res.json({ files });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch files' });
   }
 });
 
