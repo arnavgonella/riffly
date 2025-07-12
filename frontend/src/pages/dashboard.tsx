@@ -18,16 +18,18 @@ export default function Dashboard() {
 
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
     if (!session) router.replace("/login");
   }, [session, router]);
 
   const handleUpload = async () => {
-    if (!mediaBlob) return;
+    if (!mediaBlob || !user) return;
     setLoading(true);
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
+    formData.append("userId", user.id);
 
     try {
       const res = await fetch(
@@ -36,11 +38,20 @@ export default function Dashboard() {
       );
       const data = await res.json();
       setDownloadLink(data.download ?? null);
+      if (data.download) setHistory((h) => [data.download, ...h]);
     } catch {
       alert("⚠️ Upload failed");
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!user) return;
+    fetch(`https://riffly-backend.onrender.com/files/${user.id}`)
+      .then((r) => r.json())
+      .then((d) => setHistory(d.files ?? []))
+      .catch(() => setHistory([]));
+  }, [user]);
 
   if (!session) return null;
 
@@ -89,6 +100,25 @@ export default function Dashboard() {
           >
             Download Excel Report
           </a>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div className="mt-10 text-left">
+          <h2 className="font-bold mb-2">Previous Reports</h2>
+          <ul className="list-disc list-inside">
+            {history.map((f) => (
+              <li key={f} className="my-1">
+                <a
+                  href={`https://riffly-backend.onrender.com/uploads/${f}`}
+                  download
+                  className="text-blue-600 underline"
+                >
+                  {f}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </main>
