@@ -38,4 +38,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 # riffly
 MVP for Riffly, an AI native workflow engine for manufacturing. This version replaces manual checklists with automated logging.
- b990c92618bd2b8721a4c73edfbd3bd50a3c14e2
