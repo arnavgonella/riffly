@@ -37,5 +37,5 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 # riffly
-MVP for Riffly, a collaborative music creation platform
+MVP for Riffly, an AI native workflow engine for manufacturing. This version replaces manual checklists with automated logging.
  b990c92618bd2b8721a4c73edfbd3bd50a3c14e2
