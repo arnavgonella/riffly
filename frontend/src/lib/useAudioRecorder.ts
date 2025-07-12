@@ -1,4 +1,3 @@
-// riffly/frontend/lib/useAudioRecorder.ts
 import { useState, useRef, useCallback } from "react";
 
 export interface UseAudioRecorder {
