@@ -46,34 +46,19 @@ function normalizeUnit(text) {
 }
 
 function convertUnit(value, from, to) {
-  const LENGTH_FACTORS = {
-    mm: 0.001,
-    cm: 0.01,
-    m: 1,
-    in: 0.0254,
-    ft: 0.3048,
-  };
-  const MASS_FACTORS = {
-    g: 1,
-    kg: 1000,
-    lbs: 453.592,
-  };
-
+  const LENGTH_FACTORS = { mm: 0.001, cm: 0.01, m: 1, in: 0.0254, ft: 0.3048 };
+  const MASS_FACTORS = { g: 1, kg: 1000, lbs: 453.592 };
   const f = normalizeUnit(from);
   const t = normalizeUnit(to);
-
   if (f === t) return value;
-
   if (LENGTH_FACTORS[f] && LENGTH_FACTORS[t]) {
     const meters = value * LENGTH_FACTORS[f];
     return meters / LENGTH_FACTORS[t];
   }
-
   if (MASS_FACTORS[f] && MASS_FACTORS[t]) {
     const grams = value * MASS_FACTORS[f];
     return grams / MASS_FACTORS[t];
   }
-
   return value;
 }
 
@@ -182,42 +167,28 @@ function wordsToNumber(str) {
 }
 
 function parseTranscript(rawText) {
-  const results = [];
+  const parsed = [];
 
   const partPattern = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
-  const unitPattern = /\b(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)\b/i;
+  const dimensionPattern = /([a-zA-Z0-9\s\.\/-]+?)\s*(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)/gi;
 
-  const parts = [];
-  let match;
-  while ((match = partPattern.exec(rawText))) {
-    parts.push({ part: match[1], index: match.index + match[0].length });
-  }
+  const parts = [...rawText.matchAll(partPattern)];
+  const dims = [...rawText.matchAll(dimensionPattern)];
 
-  for (let i = 0; i < parts.length; i++) {
-    const start = parts[i].index;
-    const end = i + 1 < parts.length ? parts[i + 1].index : rawText.length;
-    const segment = rawText.slice(start, end);
-    const unitMatch = segment.match(unitPattern);
-    if (!unitMatch) continue;
-
-    const unit = normalizeUnit(unitMatch[1]);
-    const before = segment.slice(0, unitMatch.index).trim();
-    const tokens = before.split(/\s+/);
-    const look = [];
-    for (let j = tokens.length - 1; j >= 0 && look.length < 3; j--) {
-      const t = tokens[j];
-      if (!/[a-zA-Z]/.test(t) || /^[a-zA-Z]+$/.test(t)) {
-        look.unshift(t);
-      }
+  for (let i = 0; i < Math.min(parts.length, dims.length); i++) {
+    const part = parts[i][1];
+    const numStr = dims[i][1].trim();
+    let measured = parseFloat(numStr);
+    if (isNaN(measured)) {
+      measured = wordsToNumber(numStr);
     }
-    const slice = look.join(' ');
-    const numMatch = slice.match(/-?\d+(?:\.\d+)?/);
-    const measured = numMatch ? parseFloat(numMatch[0]) : wordsToNumber(slice);
+    const unitRaw = dims[i][2];
+    const unit = normalizeUnit(unitRaw);
 
-    results.push({ part: parts[i].part, measured, unit });
+    parsed.push({ part, measured, unit });
   }
 
-  return results;
+  return parsed;
 }
 
 async function transcribeAndParse(filePath) {
