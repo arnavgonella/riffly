@@ -33,9 +33,6 @@ app.post('/upload', async (req, res) => {
   }
 
   const audioFile = req.files.audio;
-
-  // Save audio file
-  // Preserve the incoming file extension so Whisper can detect the format
   const ext = path.extname(audioFile.name) || '.webm';
   const fileName = `audio_${Date.now()}${ext}`;
   const savePath = path.join(uploadDir, fileName);
@@ -74,11 +71,7 @@ app.post('/annotate', async (req, res) => {
   try {
     await audioFile.mv(audioPath);
     await excelFile.mv(excelPath);
-    const annotated = await transcribeAndAnnotate(
-      audioPath,
-      excelPath,
-      excelBase
-    );
+    const annotated = await transcribeAndAnnotate(audioPath, excelPath, excelBase);
     await addFile(userId, path.basename(annotated));
     res.json({ download: path.basename(annotated) });
   } catch (err) {
