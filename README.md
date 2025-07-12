@@ -30,6 +30,13 @@ Riffly is an AI-native workflow tool for manufacturing quality control. It lets 
 
 Recorded audio uploaded from the dashboard page will generate Excel files in `backend/uploads` that can be downloaded from the UI.
 
+You can also upload an existing Excel template alongside the audio. The backend
+will copy the template, fill in any matching part numbers with the recorded
+measurements, check tolerances and add comments for values that fall outside the
+allowed range. The annotated workbook keeps the original filename, prefixed with
+`annotated_` and the recording date, so it's easy to trace back to the source
+file.
+
 The backend stores a small record of generated files in `backend/files.json`. Each
 entry is tied to the authenticated user ID so the dashboard can list your past
 reports. Entries and their files are automatically removed after one week.
