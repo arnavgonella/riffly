@@ -58,7 +58,7 @@ export default function NewRiffRecorder({ onUpload }: Props) {
 
     setUploading(true);
     try {
-      await axios.post("http://localhost:3001/upload", formData);
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload`, formData);
       onUpload();
       setAudioUrl(null);
       setCaption("");

@@ -23,15 +23,17 @@ export default function Dashboard() {
     if (!session) router.replace("/login");
   }, [session, router]);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   const handleUpload = async () => {
-    if (!mediaBlob) return;
+    if (!mediaBlob || !backendUrl) return;
     setLoading(true);
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
 
     try {
       const res = await fetch(
-        "https://riffly-backend.onrender.com/upload",
+        `${backendUrl}/upload`,
         { method: "POST", body: formData }
       );
       const data = await res.json();
@@ -83,7 +85,7 @@ export default function Dashboard() {
         <div className="mt-6">
           <p className="text-green-600 font-semibold">✅ Inspection complete!</p>
           <a
-            href={`https://riffly-backend.onrender.com/uploads/${downloadLink}`}
+            href={`${backendUrl}/uploads/${downloadLink}`}
             download
             className="text-blue-600 underline"
           >
