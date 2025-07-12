@@ -1,7 +1,7 @@
 import { useSession, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import useAudioRecorder from "@lib/useAudioRecorder";
+import useAudioRecorder from "@/lib/useAudioRecorder";
 
 export default function Dashboard() {
   const session = useSession();
