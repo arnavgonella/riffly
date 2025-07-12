@@ -8,8 +8,6 @@ const path = require('path');
 const { transcribeAndParse } = require('./transcription.cjs');
 const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
 
-
-
 const app = express();
 const PORT = 3001;
 
@@ -55,8 +53,8 @@ app.get('/files/:userId', async (req, res) => {
     const rows = await getFiles(req.params.userId);
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const files = rows
-      .filter((r) => r.createdAt >= cutoff)
-      .map((r) => r.fileName);
+      .filter((r) => r.created_at >= cutoff)
+      .map((r) => r.file_name);
     res.json({ files });
   } catch {
     res.status(500).json({ error: 'Failed to fetch files' });
