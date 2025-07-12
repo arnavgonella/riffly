@@ -183,3 +183,4 @@ vite.config.ts.timestamp-*
 
 frontend/.env.local
 backend/.env
+package-lock.json

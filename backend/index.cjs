@@ -8,8 +8,6 @@ const path = require('path');
 const { transcribeAndParse } = require('./transcription.cjs');
 const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
 
-
-
 const app = express();
 const PORT = 3001;
 
@@ -66,4 +64,3 @@ app.get('/files/:userId', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
 });
-
