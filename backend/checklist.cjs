@@ -90,7 +90,8 @@ async function annotateChecklist(originalPath, data, originalName = null) {
 
   const startCol = sheet.columnCount + 1;
   sheet.getRow(1).getCell(startCol).value = 'Recorded Value';
-  sheet.getRow(1).getCell(startCol + 1).value = 'Comment';
+  sheet.getRow(1).getCell(startCol + 1).value = 'Recorded Unit';
+  sheet.getRow(1).getCell(startCol + 2).value = 'Comment';
 
   // detect relevant columns
   let partCol = 1;
@@ -133,6 +134,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
         const measured = convertUnit(entry.measured, entry.unit, targetUnit);
 
         sheet.getRow(i).getCell(startCol).value = measured;
+        sheet.getRow(i).getCell(startCol + 1).value = targetUnit;
 
         if (tolCol && dimCol) {
           const targetVal = parseNumber(sheet.getRow(i).getCell(dimCol).value);
@@ -142,9 +144,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             const upper = targetVal + tolVal;
             if (measured < lower || measured > upper) {
               const diff = measured < lower ? lower - measured : measured - upper;
-              sheet.getRow(i)
-                .getCell(startCol + 1)
-                .value = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
+              sheet.getRow(i).getCell(startCol + 2).value = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
             }
           }
         }
