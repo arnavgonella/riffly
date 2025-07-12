@@ -21,7 +21,7 @@ export default function Home() {
 
   async function fetchRiffs() {
     try {
-      const res = await axios.get("http://localhost:3001/riffs");
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/riffs`);
       setRiffs(res.data);
     } catch (error) {
       console.error("Error fetching riffs", error);
@@ -39,7 +39,7 @@ export default function Home() {
     formData.append("caption", caption);
 
     try {
-      await axios.post("http://localhost:3001/upload", formData);
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload`, formData);
       setFile(null);
       setUsername("");
       setCaption("");

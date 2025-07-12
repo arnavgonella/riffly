@@ -36,6 +36,16 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Environment Variables
+
+Create a `.env` file based on `.env.example` and provide the backend URL used by the frontend:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and set `NEXT_PUBLIC_BACKEND_URL` to the address of the backend server.
+
 # riffly
 MVP for Riffly, an AI native workflow engine for manufacturing. This version replaces manual checklists with automated logging.
  b990c92618bd2b8721a4c73edfbd3bd50a3c14e2
