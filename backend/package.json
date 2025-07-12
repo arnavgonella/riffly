@@ -9,7 +9,7 @@
     "start": "node index.cjs"
   },
   "dependencies": {
-    "better-sqlite3": "^8.7.0",
+    "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",
     "exceljs": "^4.4.0",
