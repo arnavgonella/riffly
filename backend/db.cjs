@@ -1,46 +1,57 @@
-const fs = require('fs');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbFile = path.join(__dirname, 'files.json');
+const dbPath = path.join(__dirname, 'riffly.db');
+const db = new sqlite3.Database(dbPath);
 
-function readData() {
-  try {
-    return JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-  } catch {
-    return [];
-  }
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )`);
+});
+
+function addFile(userId, fileName) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'INSERT INTO files (user_id, file_name, created_at) VALUES (?, ?, ?)',
+      [userId, fileName, Date.now()],
+      (err) => {
+        if (err) reject(err); else resolve();
+      }
+    );
+  });
 }
 
-function writeData(data) {
-  fs.writeFileSync(dbFile, JSON.stringify(data));
+function getFiles(userId) {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT file_name, created_at FROM files WHERE user_id = ?', [userId], (err, rows) => {
+      if (err) reject(err); else resolve(rows || []);
+    });
+  });
 }
 
-async function addFile(userId, fileName) {
-  const data = readData();
-  data.push({ userId, fileName, createdAt: Date.now() });
-  writeData(data);
-}
-
-async function getFiles(userId) {
-  return readData().filter((r) => r.userId === userId);
-}
-
-async function deleteFileRecord(fileName) {
-  const data = readData().filter((r) => r.fileName !== fileName);
-  writeData(data);
+function deleteFileRecord(fileName) {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM files WHERE file_name = ?', [fileName], (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
 }
 
 function cleanupOldFiles() {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  let data = readData();
-  data.forEach((r) => {
-    if (r.createdAt < cutoff) {
-      const filePath = path.join(__dirname, 'uploads', r.fileName);
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 1 week
+  db.all('SELECT file_name, created_at FROM files WHERE created_at < ?', [cutoff], (err, rows) => {
+    if (err || !rows) return;
+    rows.forEach((row) => {
+      const filePath = path.join(__dirname, 'uploads', row.file_name);
       fs.unlink(filePath, () => {});
-    }
+      deleteFileRecord(row.file_name);
+    });
   });
-  data = data.filter((r) => r.createdAt >= cutoff);
-  writeData(data);
 }
 
 module.exports = { addFile, getFiles, deleteFileRecord, cleanupOldFiles };
