@@ -39,7 +39,7 @@ export default function LoginPage() {
             onClick={handleLogin}
             className="bg-black text-white px-4 py-2 rounded w-full"
           >
-            Send Magic Link
+            Send Login Link
           </button>
         </>
       )}
