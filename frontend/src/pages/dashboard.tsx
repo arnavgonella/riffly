@@ -33,10 +33,10 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch(
-        "https://riffly-backend.onrender.com/upload",
-        { method: "POST", body: formData }
-      );
+      const res = await fetch("https://riffly-backend.onrender.com/upload", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
@@ -55,10 +55,10 @@ export default function Dashboard() {
     formData.append("userId", user.id);
 
     try {
-      const res = await fetch(
-        "https://riffly-backend.onrender.com/annotate",
-        { method: "POST", body: formData }
-      );
+      const res = await fetch("https://riffly-backend.onrender.com/annotate", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       setDownloadLink(data.download ?? null);
       if (data.download) setHistory((h) => [data.download, ...h]);
