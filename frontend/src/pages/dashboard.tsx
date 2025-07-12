@@ -120,20 +120,6 @@ export default function Dashboard() {
         </button>
       )}
 
-      {!downloadLink && (
-        <div className="mt-4">
-          <label className="block text-left mb-1 font-medium">
-            Excel file to annotate (optional):
-          </label>
-          <input
-            type="file"
-            accept=".xlsx"
-            onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="block w-full border p-2"
-          />
-        </div>
-      )}
-
       {mediaBlob && !loading && !downloadLink && (
         <div className="mt-4 space-y-3">
           <button
