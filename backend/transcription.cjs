@@ -84,19 +84,120 @@ function parseNumber(val) {
   return match ? parseFloat(match[0]) : NaN;
 }
 
+function wordsToNumber(str) {
+  const singles = {
+    zero: 0,
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+    eleven: 11,
+    twelve: 12,
+    thirteen: 13,
+    fourteen: 14,
+    fifteen: 15,
+    sixteen: 16,
+    seventeen: 17,
+    eighteen: 18,
+    nineteen: 19,
+  };
+  const tens = {
+    twenty: 20,
+    thirty: 30,
+    forty: 40,
+    fifty: 50,
+    sixty: 60,
+    seventy: 70,
+    eighty: 80,
+    ninety: 90,
+  };
+  const tokens = str
+    .replace(/-/g, ' ')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t !== 'and' && t !== 'a');
+  let result = 0;
+  let decimal = false;
+  let decimalStr = '';
+  for (const t of tokens) {
+    if (t === 'point' || t === 'dot') {
+      decimal = true;
+      continue;
+    }
+    if (t === 'half') {
+      if (decimal) {
+        decimalStr += '5';
+      } else {
+        decimal = true;
+        decimalStr = '5';
+      }
+      continue;
+    }
+    if (t === 'quarter') {
+      if (decimal) {
+        decimalStr += '25';
+      } else {
+        decimal = true;
+        decimalStr = '25';
+      }
+      continue;
+    }
+    if (singles[t] != null) {
+      if (decimal) {
+        decimalStr += String(singles[t]);
+      } else {
+        result += singles[t];
+      }
+      continue;
+    }
+    if (tens[t] != null) {
+      if (decimal) {
+        decimalStr += String(tens[t] / 10);
+      } else {
+        result += tens[t];
+      }
+      continue;
+    }
+    const fracMatch = t.match(/^(\d+)\/(\d+)$/);
+    if (fracMatch) {
+      const [_, num, den] = fracMatch;
+      const frac = parseInt(num) / parseInt(den);
+      if (decimal) {
+        decimalStr += String(frac).split('.')[1] || '';
+      } else {
+        result += frac;
+      }
+    }
+  }
+  if (decimal && decimalStr) {
+    result += parseFloat('0.' + decimalStr);
+  }
+  return result;
+}
+
 function parseTranscript(rawText) {
   const parsed = [];
 
   const partPattern = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
-  const dimensionPattern = /(\d+(\.\d+)?)\s*(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)/gi;
+  const dimensionPattern = /([a-zA-Z0-9\s\.\/-]+?)\s*(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)/gi;
 
   const parts = [...rawText.matchAll(partPattern)];
   const dims = [...rawText.matchAll(dimensionPattern)];
 
   for (let i = 0; i < Math.min(parts.length, dims.length); i++) {
     const part = parts[i][1];
-    const measured = parseFloat(dims[i][1]);
-    const unitRaw = dims[i][3];
+    const numStr = dims[i][1].trim();
+    let measured = parseFloat(numStr);
+    if (isNaN(measured)) {
+      measured = wordsToNumber(numStr);
+    }
+    const unitRaw = dims[i][2];
 
     const unit = normalizeUnit(unitRaw);
 
