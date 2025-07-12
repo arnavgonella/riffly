@@ -2,6 +2,13 @@ const fs = require('fs');
 const { OpenAI } = require('openai');
 const { createChecklist } = require('./checklist.cjs');
 
+// Polyfill global File/Blob for Node <20 so openai uploads work
+if (typeof global.File === 'undefined') {
+  const { File, Blob } = require('node:buffer');
+  global.File = File;
+  global.Blob = Blob;
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const UNIT_MAP = {
