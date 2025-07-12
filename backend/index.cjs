@@ -35,7 +35,9 @@ app.post('/upload', async (req, res) => {
   const audioFile = req.files.audio;
 
   // Save audio file
-  const fileName = `audio_${Date.now()}.wav`;
+  // Preserve the incoming file extension so Whisper can detect the format
+  const ext = path.extname(audioFile.name) || '.webm';
+  const fileName = `audio_${Date.now()}${ext}`;
   const savePath = path.join(uploadDir, fileName);
 
   try {
