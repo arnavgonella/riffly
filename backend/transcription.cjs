@@ -2,7 +2,6 @@ const fs = require('fs');
 const { OpenAI } = require('openai');
 const { createChecklist, annotateChecklist } = require('./checklist.cjs');
 
-// Polyfill global File/Blob for Node <20 so openai uploads work
 if (typeof global.File === 'undefined') {
   const { File, Blob } = require('node:buffer');
   global.File = File;
@@ -12,32 +11,15 @@ if (typeof global.File === 'undefined') {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const UNIT_MAP = {
-  millimeter: 'mm',
-  millimeters: 'mm',
-  mm: 'mm',
-  centimeter: 'cm',
-  centimeters: 'cm',
-  cm: 'cm',
-  meter: 'm',
-  meters: 'm',
-  m: 'm',
-  inch: 'in',
-  inches: 'in',
-  in: 'in',
-  foot: 'ft',
-  feet: 'ft',
-  ft: 'ft',
-  pound: 'lbs',
-  pounds: 'lbs',
-  lbs: 'lbs',
-  kilogram: 'kg',
-  kilograms: 'kg',
-  kg: 'kg',
-  gram: 'g',
-  grams: 'g',
-  g: 'g',
-  degree: '°',
-  degrees: '°',
+  millimeter: 'mm', millimeters: 'mm', mm: 'mm',
+  centimeter: 'cm', centimeters: 'cm', cm: 'cm',
+  meter: 'm', meters: 'm', m: 'm',
+  inch: 'in', inches: 'in', in: 'in',
+  foot: 'ft', feet: 'ft', ft: 'ft',
+  pound: 'lbs', pounds: 'lbs', lbs: 'lbs',
+  kilogram: 'kg', kilograms: 'kg', kg: 'kg',
+  gram: 'g', grams: 'g', g: 'g',
+  degree: '°', degrees: '°',
 };
 
 function normalizeUnit(text) {
@@ -71,42 +53,17 @@ function parseNumber(val) {
 
 function wordsToNumber(str) {
   const singles = {
-    zero: 0,
-    one: 1,
-    two: 2,
-    three: 3,
-    four: 4,
-    five: 5,
-    six: 6,
-    seven: 7,
-    eight: 8,
-    nine: 9,
-    ten: 10,
-    eleven: 11,
-    twelve: 12,
-    thirteen: 13,
-    fourteen: 14,
-    fifteen: 15,
-    sixteen: 16,
-    seventeen: 17,
-    eighteen: 18,
-    nineteen: 19,
+    zero: 0, one: 1, two: 2, three: 3, four: 4,
+    five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+    ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+    fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
+    eighteen: 18, nineteen: 19,
   };
   const tens = {
-    twenty: 20,
-    thirty: 30,
-    forty: 40,
-    fifty: 50,
-    sixty: 60,
-    seventy: 70,
-    eighty: 80,
-    ninety: 90,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50,
+    sixty: 60, seventy: 70, eighty: 80, ninety: 90,
   };
-  const tokens = str
-    .replace(/-/g, ' ')
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t !== 'and' && t !== 'a');
+  const tokens = str.replace(/-/g, ' ').toLowerCase().split(/\s+/).filter(t => t !== 'and' && t !== 'a');
   let result = 0;
   let decimal = false;
   let decimalStr = '';
@@ -116,53 +73,32 @@ function wordsToNumber(str) {
       continue;
     }
     if (t === 'half') {
-      if (decimal) {
-        decimalStr += '5';
-      } else {
-        decimal = true;
-        decimalStr = '5';
-      }
+      decimalStr += '5';
       continue;
     }
     if (t === 'quarter') {
-      if (decimal) {
-        decimalStr += '25';
-      } else {
-        decimal = true;
-        decimalStr = '25';
-      }
+      decimalStr += '25';
       continue;
     }
     if (singles[t] != null) {
-      if (decimal) {
-        decimalStr += String(singles[t]);
-      } else {
-        result += singles[t];
-      }
+      if (decimal) decimalStr += String(singles[t]);
+      else result += singles[t];
       continue;
     }
     if (tens[t] != null) {
-      if (decimal) {
-        decimalStr += String(tens[t] / 10);
-      } else {
-        result += tens[t];
-      }
+      if (decimal) decimalStr += String(tens[t] / 10);
+      else result += tens[t];
       continue;
     }
     const fracMatch = t.match(/^(\d+)\/(\d+)$/);
     if (fracMatch) {
       const [_, num, den] = fracMatch;
       const frac = parseInt(num) / parseInt(den);
-      if (decimal) {
-        decimalStr += String(frac).split('.')[1] || '';
-      } else {
-        result += frac;
-      }
+      if (decimal) decimalStr += String(frac).split('.')[1] || '';
+      else result += frac;
     }
   }
-  if (decimal && decimalStr) {
-    result += parseFloat('0.' + decimalStr);
-  }
+  if (decimal && decimalStr) result += parseFloat('0.' + decimalStr);
   return result;
 }
 
@@ -174,13 +110,9 @@ function parseNumericSlice(slice) {
   if (!isNaN(result)) {
     const after = replaced.slice(digits.index + digits[0].length);
     const frac = after.match(/(\d+)\/(\d+)/);
-    if (frac) {
-      result += parseInt(frac[1]) / parseInt(frac[2]);
-    } else if (/half/i.test(after)) {
-      result += 0.5;
-    } else if (/quarter/i.test(after)) {
-      result += 0.25;
-    }
+    if (frac) result += parseInt(frac[1]) / parseInt(frac[2]);
+    else if (/half/i.test(after)) result += 0.5;
+    else if (/quarter/i.test(after)) result += 0.25;
     return result;
   }
   return wordsToNumber(slice);
@@ -188,10 +120,8 @@ function parseNumericSlice(slice) {
 
 function parseTranscript(rawText) {
   const results = [];
-
   const partPattern = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
   const unitPattern = /\b(mm|millimeters?|cm|centimeters?|m|meters?|in|inches?|ft|feet|foot|lbs|pounds?|kg|kilograms?|g|grams?|degrees?)\b/i;
-
   const parts = [];
   let match;
   while ((match = partPattern.exec(rawText))) {
@@ -204,7 +134,6 @@ function parseTranscript(rawText) {
     const segment = rawText.slice(start, end);
     const unitMatch = segment.match(unitPattern);
     if (!unitMatch) continue;
-
     const unit = normalizeUnit(unitMatch[1]);
     const before = segment.slice(0, unitMatch.index).trim();
     const tokens = before.split(/\s+/);
@@ -212,24 +141,19 @@ function parseTranscript(rawText) {
     const allowed = /^(?:-?\d+(?:\.\d+)?|\d+\/\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|point|dot|and|a|half|quarter)$/i;
     for (let j = tokens.length - 1; j >= 0; j--) {
       const t = tokens[j];
-      if (allowed.test(t)) {
-        look.unshift(t);
-      } else if (look.length > 0) {
-        break;
-      }
+      if (allowed.test(t)) look.unshift(t);
+      else if (look.length > 0) break;
     }
     const slice = look.join(' ');
     const measured = parseNumericSlice(slice);
-
     results.push({ part: parts[i].part, measured, unit });
   }
 
   return results;
 }
 
-async function transcribeAndParse(filePath, images = []) {
+async function transcribeAndParse(filePath, images = [], baseUrl = null) {
   console.log('🔊 Received file:', filePath);
-
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(filePath),
     model: 'whisper-1',
@@ -238,7 +162,6 @@ async function transcribeAndParse(filePath, images = []) {
 
   const rawText = transcription.text.trim();
   console.log('📝 Transcript:', rawText);
-
   const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
 
@@ -266,13 +189,11 @@ async function transcribeAndParse(filePath, images = []) {
     target.images.push(img.path);
   });
 
-  const checklistPath = await createChecklist(parsed);
-  return checklistPath;
+  return await createChecklist(parsed, baseUrl);
 }
 
-async function transcribeAndAnnotate(audioPath, excelPath, originalName, images = []) {
+async function transcribeAndAnnotate(audioPath, excelPath, originalName, images = [], baseUrl = null) {
   console.log('🔊 Received files:', audioPath, excelPath);
-
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(audioPath),
     model: 'whisper-1',
@@ -281,7 +202,6 @@ async function transcribeAndAnnotate(audioPath, excelPath, originalName, images 
 
   const rawText = transcription.text.trim();
   console.log('📝 Transcript:', rawText);
-
   const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
 
@@ -309,8 +229,7 @@ async function transcribeAndAnnotate(audioPath, excelPath, originalName, images 
     target.images.push(img.path);
   });
 
-  const annotatedPath = await annotateChecklist(excelPath, parsed, originalName);
-  return annotatedPath;
+  return await annotateChecklist(excelPath, parsed, originalName, baseUrl);
 }
 
 module.exports = { transcribeAndParse, transcribeAndAnnotate };

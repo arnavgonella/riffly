@@ -2,7 +2,7 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = process.env.BACKEND_PUBLIC_URL || 'http://localhost:3001';
+const DEFAULT_BASE_URL = process.env.BACKEND_PUBLIC_URL || 'http://localhost:3001';
 
 function normalizeUnit(text) {
   const map = {
@@ -44,7 +44,7 @@ function parseNumber(val) {
   return match ? parseFloat(match[0]) : NaN;
 }
 
-async function createChecklist(data) {
+async function createChecklist(data, baseUrl = DEFAULT_BASE_URL) {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Inspection Results');
 
@@ -73,7 +73,7 @@ async function createChecklist(data) {
       fs.writeFileSync(pagePath, html);
       row.getCell(4).value = {
         text: 'View Photos',
-        hyperlink: `${BASE_URL}/uploads/${pageName}`,
+        hyperlink: `${baseUrl}/uploads/${pageName}`,
       };
     }
   });
@@ -84,7 +84,7 @@ async function createChecklist(data) {
   return path.basename(filePath);
 }
 
-async function annotateChecklist(originalPath, data, originalName = null) {
+async function annotateChecklist(originalPath, data, originalName = null, baseUrl = DEFAULT_BASE_URL) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(originalPath);
   const sheet = workbook.worksheets[0];
@@ -124,8 +124,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
       const cell = sheet.getRow(i).getCell(partCol).value;
       if (
         cell &&
-        String(cell).trim().toLowerCase() ===
-        String(entry.part).trim().toLowerCase()
+        String(cell).trim().toLowerCase() === String(entry.part).trim().toLowerCase()
       ) {
         let targetUnit = headerUnit;
         if (unitCol) {
@@ -138,6 +137,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
         sheet.getRow(i).getCell(startCol).value = measured;
         sheet.getRow(i).getCell(startCol + 1).value = targetUnit;
 
+        let specText = '';
         if (tolCol && dimCol) {
           const targetVal = parseNumber(sheet.getRow(i).getCell(dimCol).value);
           const tolVal = parseNumber(sheet.getRow(i).getCell(tolCol).value);
@@ -146,11 +146,15 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             const upper = targetVal + tolVal;
             if (measured < lower || measured > upper) {
               const diff = measured < lower ? lower - measured : measured - upper;
-              sheet.getRow(i).getCell(startCol + 2).value = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
+              specText = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
             } else {
-              sheet.getRow(i).getCell(startCol + 2).value = 'In spec';
+              specText = 'In spec';
             }
           }
+        }
+
+        if (specText) {
+          sheet.getRow(i).getCell(startCol + 2).value = specText;
         }
 
         if (entry.images && entry.images.length > 0) {
@@ -161,10 +165,15 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             .join('\n');
           const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
           fs.writeFileSync(pagePath, html);
-          sheet.getRow(i).getCell(startCol + 2).value = {
-            text: 'View Photos',
-            hyperlink: `${BASE_URL}/uploads/${pageName}`,
-          };
+
+          const cell = sheet.getRow(i).getCell(startCol + 2);
+          if (!cell.value || typeof cell.value === 'string') {
+            cell.value = {
+              text: typeof cell.value === 'string' ? cell.value : 'View Photos',
+              hyperlink: `${baseUrl}/uploads/${pageName}`,
+            };
+          }
+          cell.font = { color: { argb: 'FF0000FF' }, underline: true };
         }
 
         break;

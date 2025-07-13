@@ -47,7 +47,6 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (blob) {
@@ -70,18 +69,22 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
 
-      <div className="mt-4 flex items-center space-x-8">
-        <button onClick={onFlip} className="text-white text-2xl">🔄</button>
+      <div className="mt-4 flex items-center space-x-12">
+        <button onClick={onFlip} className="text-white text-4xl">
+          🔄
+        </button>
         <button
           onClick={capture}
-          className="h-20 w-20 bg-white rounded-full border-4 border-gray-300"
-        />
+          className="h-24 w-24 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-4xl text-black"
+        >
+          📸
+        </button>
         <button
           onClick={() => {
             streamRef.current?.getTracks().forEach((t) => t.stop());
             onClose();
           }}
-          className="text-white text-3xl"
+          className="text-white text-4xl"
         >
           ✖
         </button>

@@ -3,6 +3,7 @@ const fileUpload = require('express-fileupload');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
+
 const fs = require('fs');
 const path = require('path');
 const { transcribeAndParse, transcribeAndAnnotate } = require('./transcription.cjs');
@@ -10,14 +11,14 @@ const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
 
 const app = express();
 const PORT = 3001;
+const uploadDir = path.join(__dirname, 'uploads');
 
 app.use(cors());
 app.use(fileUpload());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // Ensure uploads folder exists
-const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
@@ -56,8 +57,11 @@ app.post('/upload', async (req, res) => {
       await img.mv(imgPath);
       savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
     }
-    const checklistFile = await transcribeAndParse(savePath, savedImages);
+
+    const baseUrl = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+    const checklistFile = await transcribeAndParse(savePath, savedImages, baseUrl);
     await addFile(userId, path.basename(checklistFile));
+
     res.json({ download: path.basename(checklistFile) });
   } catch (err) {
     console.error('❌ Upload or processing failed:', err);
@@ -90,13 +94,13 @@ app.post('/annotate', async (req, res) => {
   const savedImages = [];
 
   const excelBase = path.basename(excelFile.name);
-  const excelExt = path.extname(excelBase) || '.xlsx';
   const excelName = `upload_${Date.now()}_${excelBase}`;
   const excelPath = path.join(uploadDir, excelName);
 
   try {
     await audioFile.mv(audioPath);
     await excelFile.mv(excelPath);
+
     for (let i = 0; i < imageFiles.length; i++) {
       const img = imageFiles[i];
       const ext = path.extname(img.name) || '.jpg';
@@ -105,12 +109,10 @@ app.post('/annotate', async (req, res) => {
       await img.mv(imgPath);
       savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
     }
-    const annotated = await transcribeAndAnnotate(
-      audioPath,
-      excelPath,
-      excelBase,
-      savedImages
-    );
+
+    const baseUrl = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+    const annotated = await transcribeAndAnnotate(audioPath, excelPath, excelBase, savedImages, baseUrl);
+
     await addFile(userId, path.basename(annotated));
     res.json({ download: path.basename(annotated) });
   } catch (err) {
