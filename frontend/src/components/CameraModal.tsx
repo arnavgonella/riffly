@@ -12,6 +12,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [captured, setCaptured] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -19,7 +20,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     const start = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode }
+          video: { facingMode },
         });
         streamRef.current = stream;
         if (videoRef.current) {
@@ -34,7 +35,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     start();
 
     return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
   }, [open, facingMode]);
@@ -46,10 +47,18 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      if (blob) onCapture(blob);
-      onClose();
+      if (blob) {
+        onCapture(blob);
+        setCaptured(true);
+        setTimeout(() => {
+          setCaptured(false);
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          onClose();
+        }, 500);
+      }
     }, "image/jpeg", 0.95);
   };
 
@@ -59,23 +68,20 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
       <video ref={videoRef} className="w-full max-w-md" playsInline muted />
       {error && <p className="text-red-500 mt-2">{error}</p>}
-      <div className="mt-4 flex items-center space-x-6">
-        <button
-          onClick={onFlip}
-          className="text-white text-2xl"
-        >
-          🔄
-        </button>
+      {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
+
+      <div className="mt-4 flex items-center space-x-8">
+        <button onClick={onFlip} className="text-white text-2xl">🔄</button>
         <button
           onClick={capture}
-          className="h-16 w-16 bg-white rounded-full border-4 border-gray-300"
+          className="h-20 w-20 bg-white rounded-full border-4 border-gray-300"
         />
         <button
           onClick={() => {
-            streamRef.current?.getTracks().forEach(t => t.stop());
+            streamRef.current?.getTracks().forEach((t) => t.stop());
             onClose();
           }}
-          className="text-white text-2xl"
+          className="text-white text-3xl"
         >
           ✖
         </button>
@@ -83,4 +89,3 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     </div>
   );
 }
-

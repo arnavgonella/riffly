@@ -33,6 +33,18 @@ export default function Dashboard() {
     if (!session) router.replace("/login");
   }, [session, router]);
 
+  useEffect(() => {
+    if (!user) return;
+    fetch(`${API_BASE}/files/${user.id}`)
+      .then((r) => r.json())
+      .then((d) => setHistory(d.files ?? []))
+      .catch(() => setHistory([]));
+  }, [user]);
+
+  useEffect(() => {
+    if (downloadLink) setExcelFile(null);
+  }, [downloadLink]);
+
   const handleUpload = async () => {
     if (!mediaBlob || !user) return;
     setLoading(true);
@@ -88,24 +100,13 @@ export default function Dashboard() {
   };
 
   const openCamera = () => setCameraOpen(true);
+
   const onPhotoCaptured = (blob: Blob) => {
     if (recordStart != null) {
       const t = (Date.now() - recordStart) / 1000;
       setPhotos((p) => [...p, { blob, time: t }]);
     }
   };
-
-  useEffect(() => {
-    if (!user) return;
-    fetch(`${API_BASE}/files/${user.id}`)
-      .then((r) => r.json())
-      .then((d) => setHistory(d.files ?? []))
-      .catch(() => setHistory([]));
-  }, [user]);
-
-  useEffect(() => {
-    if (downloadLink) setExcelFile(null);
-  }, [downloadLink]);
 
   if (!session) return null;
 

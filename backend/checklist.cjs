@@ -2,6 +2,8 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
 
+const BASE_URL = process.env.BACKEND_PUBLIC_URL || 'http://localhost:3001';
+
 function normalizeUnit(text) {
   const map = {
     millimeter: 'mm', millimeters: 'mm', mm: 'mm',
@@ -69,7 +71,10 @@ async function createChecklist(data) {
         .join('\n');
       const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
       fs.writeFileSync(pagePath, html);
-      row.getCell(4).value = { text: 'View Photos', hyperlink: pageName };
+      row.getCell(4).value = {
+        text: 'View Photos',
+        hyperlink: `${BASE_URL}/uploads/${pageName}`,
+      };
     }
   });
 
@@ -158,7 +163,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
           fs.writeFileSync(pagePath, html);
           sheet.getRow(i).getCell(startCol + 2).value = {
             text: 'View Photos',
-            hyperlink: pageName,
+            hyperlink: `${BASE_URL}/uploads/${pageName}`,
           };
         }
 
