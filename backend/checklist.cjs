@@ -167,12 +167,8 @@ async function annotateChecklist(originalPath, data, originalName = null, baseUr
           fs.writeFileSync(pagePath, html);
 
           const cell = sheet.getRow(i).getCell(startCol + 2);
-          if (!cell.value || typeof cell.value === 'string') {
-            cell.value = {
-              text: typeof cell.value === 'string' ? cell.value : 'View Photos',
-              hyperlink: `${baseUrl}/uploads/${pageName}`,
-            };
-          }
+          const text = typeof cell.value === 'string' ? cell.value : 'View Photos';
+          cell.value = { text, hyperlink: `${baseUrl}/uploads/${pageName}` };
           cell.font = { color: { argb: 'FF0000FF' }, underline: true };
         }
 

@@ -31,11 +31,11 @@ export default function CameraModal({
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await new Promise((res) => {
+          await new Promise((res) =>
             videoRef.current?.addEventListener("loadedmetadata", () => res(null), {
               once: true,
-            });
-          });
+            })
+          );
           await videoRef.current.play();
         }
       } catch {
@@ -54,17 +54,15 @@ export default function CameraModal({
   const capture = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
-    const width =
-      videoRef.current.videoWidth || videoRef.current.clientWidth || 640;
-    const height =
-      videoRef.current.videoHeight || videoRef.current.clientHeight || 480;
+    const width = videoRef.current.videoWidth || videoRef.current.clientWidth || 640;
+    const height = videoRef.current.videoHeight || videoRef.current.clientHeight || 480;
     canvas.width = width;
     canvas.height = height;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(videoRef.current, 0, 0, width, height);
     canvas.toBlob(
       (blob) => {
         if (blob) {
@@ -90,12 +88,12 @@ export default function CameraModal({
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
       <div className="mt-4 flex items-center space-x-16">
-        <button onClick={onFlip} className="text-white text-5xl p-2">
+        <button onClick={onFlip} className="text-white text-6xl p-3">
           🔄
         </button>
         <button
           onClick={capture}
-          className="h-28 w-28 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-6xl text-black"
+          className="h-32 w-32 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-7xl text-black"
         >
           📸
         </button>
@@ -104,7 +102,7 @@ export default function CameraModal({
             streamRef.current?.getTracks().forEach((t) => t.stop());
             onClose();
           }}
-          className="text-white text-5xl p-2"
+          className="text-white text-6xl p-3"
         >
           ✖
         </button>

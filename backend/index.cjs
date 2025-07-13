@@ -40,9 +40,10 @@ app.post('/upload', async (req, res) => {
   const ext = path.extname(audioFile.name) || '.webm';
   const fileName = `audio_${Date.now()}${ext}`;
   const savePath = path.join(uploadDir, fileName);
-
   const imageFiles = imageFilesRaw
-    ? Array.isArray(imageFilesRaw) ? imageFilesRaw : [imageFilesRaw]
+    ? Array.isArray(imageFilesRaw)
+      ? imageFilesRaw
+      : [imageFilesRaw]
     : [];
   const timestamps = timestampsRaw ? JSON.parse(timestampsRaw) : [];
   const savedImages = [];
@@ -87,7 +88,9 @@ app.post('/annotate', async (req, res) => {
   const audioPath = path.join(uploadDir, audioName);
 
   const imageFiles = imageFilesRaw
-    ? Array.isArray(imageFilesRaw) ? imageFilesRaw : [imageFilesRaw]
+    ? Array.isArray(imageFilesRaw)
+      ? imageFilesRaw
+      : [imageFilesRaw]
     : [];
   const timestamps = timestampsRaw ? JSON.parse(timestampsRaw) : [];
   const savedImages = [];
