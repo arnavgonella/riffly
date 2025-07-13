@@ -20,7 +20,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     const start = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode }
+          video: { facingMode },
         });
         streamRef.current = stream;
         if (videoRef.current) {
@@ -35,7 +35,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     start();
 
     return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
   }, [open, facingMode]);
@@ -49,13 +49,15 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     if (!ctx) return;
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      if (blob) onCapture(blob);
-      setCaptured(true);
-      setTimeout(() => {
-        setCaptured(false);
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        onClose();
-      }, 500);
+      if (blob) {
+        onCapture(blob);
+        setCaptured(true);
+        setTimeout(() => {
+          setCaptured(false);
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          onClose();
+        }, 500);
+      }
     }, "image/jpeg", 0.95);
   };
 
@@ -66,6 +68,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
       <video ref={videoRef} className="w-full max-w-md" playsInline muted />
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
+
       <div className="mt-4 flex items-center space-x-12">
         <button onClick={onFlip} className="text-white text-4xl">
           🔄
@@ -89,4 +92,3 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     </div>
   );
 }
-
