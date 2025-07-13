@@ -26,7 +26,7 @@ export default function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<{ blob: Blob; time: number }[]>([]);
   const [recordStart, setRecordStart] = useState<number | null>(null);
-  const [captureMode, setCaptureMode] = useState<'environment' | 'user'>('environment');
+  const [captureMode, setCaptureMode] = useState<"environment" | "user">("environment");
   const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => {
@@ -230,7 +230,7 @@ export default function Dashboard() {
         facingMode={captureMode}
         onCapture={onPhotoCaptured}
         onClose={() => setCameraOpen(false)}
-        onFlip={() => setCaptureMode((m) => (m === 'environment' ? 'user' : 'environment'))}
+        onFlip={() => setCaptureMode((m) => (m === "environment" ? "user" : "environment"))}
       />
     </main>
   );

@@ -8,7 +8,13 @@ interface Props {
   onFlip: () => void;
 }
 
-export default function CameraModal({ open, facingMode, onCapture, onClose, onFlip }: Props) {
+export default function CameraModal({
+  open,
+  facingMode,
+  onCapture,
+  onClose,
+  onFlip,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +31,11 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          await new Promise((res) => {
+            videoRef.current?.addEventListener("loadedmetadata", () => res(null), {
+              once: true,
+            });
+          });
           await videoRef.current.play();
         }
       } catch {
@@ -43,22 +54,32 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
   const capture = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    const width =
+      videoRef.current.videoWidth || videoRef.current.clientWidth || 640;
+    const height =
+      videoRef.current.videoHeight || videoRef.current.clientHeight || 480;
+    canvas.width = width;
+    canvas.height = height;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        onCapture(blob);
-        setCaptured(true);
-        setTimeout(() => {
-          setCaptured(false);
-          streamRef.current?.getTracks().forEach((t) => t.stop());
-          onClose();
-        }, 500);
-      }
-    }, "image/jpeg", 0.95);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          onCapture(blob);
+          setCaptured(true);
+          setTimeout(() => {
+            setCaptured(false);
+            streamRef.current?.getTracks().forEach((t) => t.stop());
+            onClose();
+          }, 500);
+        }
+      },
+      "image/jpeg",
+      0.95
+    );
   };
 
   if (!open) return null;
@@ -68,14 +89,13 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
       <video ref={videoRef} className="w-full max-w-md" playsInline muted />
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
-
-      <div className="mt-4 flex items-center space-x-12">
-        <button onClick={onFlip} className="text-white text-4xl">
+      <div className="mt-4 flex items-center space-x-16">
+        <button onClick={onFlip} className="text-white text-5xl p-2">
           🔄
         </button>
         <button
           onClick={capture}
-          className="h-24 w-24 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-4xl text-black"
+          className="h-28 w-28 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-6xl text-black"
         >
           📸
         </button>
@@ -84,7 +104,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
             streamRef.current?.getTracks().forEach((t) => t.stop());
             onClose();
           }}
-          className="text-white text-4xl"
+          className="text-white text-5xl p-2"
         >
           ✖
         </button>

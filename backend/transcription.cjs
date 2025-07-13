@@ -2,6 +2,7 @@ const fs = require('fs');
 const { OpenAI } = require('openai');
 const { createChecklist, annotateChecklist } = require('./checklist.cjs');
 
+// Polyfill for older Node versions
 if (typeof global.File === 'undefined') {
   const { File, Blob } = require('node:buffer');
   global.File = File;
@@ -175,6 +176,7 @@ async function transcribeAndParse(filePath, images = [], baseUrl = null) {
       }
     }
   }
+
   for (let i = 0; i < parsed.length && i < partTimes.length; i++) {
     parsed[i].time = partTimes[i];
   }
@@ -215,6 +217,7 @@ async function transcribeAndAnnotate(audioPath, excelPath, originalName, images 
       }
     }
   }
+
   for (let i = 0; i < parsed.length && i < partTimes.length; i++) {
     parsed[i].time = partTimes[i];
   }
