@@ -8,7 +8,13 @@ interface Props {
   onFlip: () => void;
 }
 
-export default function CameraModal({ open, facingMode, onCapture, onClose, onFlip }: Props) {
+export default function CameraModal({
+  open,
+  facingMode,
+  onCapture,
+  onClose,
+  onFlip,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +32,9 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await new Promise((res) => {
-            videoRef.current?.addEventListener(
-              "loadedmetadata",
-              () => res(null),
-              { once: true }
-            );
+            videoRef.current?.addEventListener("loadedmetadata", () => res(null), {
+              once: true,
+            });
           });
           await videoRef.current.play();
         }
@@ -42,7 +46,7 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     start();
 
     return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
   }, [open, facingMode]);
@@ -56,18 +60,26 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
       videoRef.current.videoHeight || videoRef.current.clientHeight || 480;
     canvas.width = width;
     canvas.height = height;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob((blob) => {
-      if (blob) onCapture(blob);
-      setCaptured(true);
-      setTimeout(() => {
-        setCaptured(false);
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        onClose();
-      }, 500);
-    }, "image/jpeg", 0.95);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          onCapture(blob);
+          setCaptured(true);
+          setTimeout(() => {
+            setCaptured(false);
+            streamRef.current?.getTracks().forEach((t) => t.stop());
+            onClose();
+          }, 500);
+        }
+      },
+      "image/jpeg",
+      0.95
+    );
   };
 
   if (!open) return null;
@@ -100,4 +112,3 @@ export default function CameraModal({ open, facingMode, onCapture, onClose, onFl
     </div>
   );
 }
-
