@@ -100,23 +100,35 @@ export default function Dashboard() {
         </div>
       )}
 
-      {!isRecording ? (
-        <button
-          onClick={() => {
-            clear();
-            setDownloadLink(null);
-            startRecording();
-          }}
-          className="bg-blue-600 text-white px-6 py-3 rounded"
-        >
-          🎙️ Start Recording
-        </button>
+      {!downloadLink ? (
+        !isRecording ? (
+          <button
+            onClick={() => {
+              clear();
+              setDownloadLink(null);
+              startRecording();
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded"
+          >
+            🎙️ Start Recording
+          </button>
+        ) : (
+          <button
+            onClick={stopRecording}
+            className="bg-red-600 text-white px-6 py-3 rounded"
+          >
+            ⏹️ Stop Recording
+          </button>
+        )
       ) : (
         <button
-          onClick={stopRecording}
-          className="bg-red-600 text-white px-6 py-3 rounded"
+          onClick={() => {
+            setExcelFile(null);
+            setDownloadLink(null);
+          }}
+          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded"
         >
-          ⏹️ Stop Recording
+          📤 Upload New File
         </button>
       )}
 
