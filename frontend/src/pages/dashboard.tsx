@@ -100,10 +100,10 @@ export default function Dashboard() {
 
   const capturePhoto = () => {
     if (!videoRef.current) return;
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       canvas.toBlob((b) => {
@@ -111,7 +111,7 @@ export default function Dashboard() {
           const t = (Date.now() - recordStart) / 1000;
           setPhotos((p) => [...p, { blob: b, time: t }]);
         }
-      }, 'image/jpeg');
+      }, "image/jpeg");
     }
     camStream?.getTracks().forEach((t) => t.stop());
     setCamStream(null);
@@ -125,7 +125,17 @@ export default function Dashboard() {
       .catch(() => setHistory([]));
   }, [user]);
 
-  // Clear excel file when reaching completion screen
+  useEffect(() => {
+    if (!camStream || !videoRef.current) return;
+    const vid = videoRef.current;
+    vid.srcObject = camStream;
+    vid.play().catch(() => {});
+    return () => {
+      vid.pause();
+      vid.srcObject = null;
+    };
+  }, [camStream]);
+
   useEffect(() => {
     if (downloadLink) {
       setExcelFile(null);
@@ -138,18 +148,16 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
-      {/* Hidden file input - always rendered */}
       <input
         ref={fileInputRef}
         type="file"
         accept=".xlsx"
         onChange={handleFileChange}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
 
       {!downloadLink && (
         <div className="mb-4">
-          {/* Custom upload button */}
           <button
             type="button"
             onClick={handleFileUpload}
@@ -157,8 +165,6 @@ export default function Dashboard() {
           >
             📤 Upload File
           </button>
-
-          {/* Optional file name preview */}
           {excelFile && (
             <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
           )}
@@ -185,7 +191,7 @@ export default function Dashboard() {
               onClick={camStream ? capturePhoto : openCamera}
               className="bg-yellow-600 text-white px-6 py-3 rounded mr-2"
             >
-              {camStream ? '📸 Capture Photo' : '📷 Open Camera'}
+              {camStream ? "📸 Capture Photo" : "📷 Open Camera"}
             </button>
             <button
               onClick={stopRecording}
@@ -193,9 +199,7 @@ export default function Dashboard() {
             >
               ⏹️ Stop Recording
             </button>
-            {camStream && (
-              <video ref={videoRef} className="mt-2 w-full" />
-            )}
+            {camStream && <video ref={videoRef} className="mt-2 w-full" />}
           </>
         )
       ) : (
@@ -207,13 +211,11 @@ export default function Dashboard() {
             >
               📤 Upload New File
             </button>
-            
             {excelFile && (
               <span className="text-sm text-gray-600">
                 Selected: {excelFile.name}
               </span>
             )}
-            
             <button
               onClick={() => {
                 clear();
