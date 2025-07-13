@@ -74,6 +74,10 @@ export default function Dashboard() {
   };
 
   const handleFileUpload = () => {
+    // Clear any previous file selection when on completion screen
+    if (downloadLink) {
+      setExcelFile(null);
+    }
     fileInputRef.current?.click();
   };
 
