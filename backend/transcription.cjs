@@ -227,12 +227,13 @@ function parseTranscript(rawText) {
   return results;
 }
 
-async function transcribeAndParse(filePath) {
+async function transcribeAndParse(filePath, images = []) {
   console.log('🔊 Received file:', filePath);
 
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(filePath),
     model: 'whisper-1',
+    response_format: 'verbose_json',
   });
 
   const rawText = transcription.text.trim();
@@ -240,17 +241,42 @@ async function transcribeAndParse(filePath) {
 
   const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
+
+  const partTimes = [];
+  const partRegex = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
+  if (Array.isArray(transcription.segments)) {
+    for (const seg of transcription.segments) {
+      let m;
+      while ((m = partRegex.exec(seg.text))) {
+        partTimes.push(seg.start);
+      }
+    }
+  }
+  for (let i = 0; i < parsed.length && i < partTimes.length; i++) {
+    parsed[i].time = partTimes[i];
+  }
+
+  images.forEach((img) => {
+    let target = parsed[0];
+    for (const p of parsed) {
+      if (img.time >= (p.time || 0)) target = p;
+      else break;
+    }
+    if (!target.images) target.images = [];
+    target.images.push(img.path);
+  });
 
   const checklistPath = await createChecklist(parsed);
   return checklistPath;
 }
 
-async function transcribeAndAnnotate(audioPath, excelPath, originalName) {
+async function transcribeAndAnnotate(audioPath, excelPath, originalName, images = []) {
   console.log('🔊 Received files:', audioPath, excelPath);
 
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(audioPath),
     model: 'whisper-1',
+    response_format: 'verbose_json',
   });
 
   const rawText = transcription.text.trim();
@@ -258,6 +284,30 @@ async function transcribeAndAnnotate(audioPath, excelPath, originalName) {
 
   const parsed = parseTranscript(rawText);
   console.log('📋 Parsed result:', parsed);
+
+  const partTimes = [];
+  const partRegex = /part(?: number)?(?: is)?\s*([a-zA-Z0-9\-\.]+)/gi;
+  if (Array.isArray(transcription.segments)) {
+    for (const seg of transcription.segments) {
+      let m;
+      while ((m = partRegex.exec(seg.text))) {
+        partTimes.push(seg.start);
+      }
+    }
+  }
+  for (let i = 0; i < parsed.length && i < partTimes.length; i++) {
+    parsed[i].time = partTimes[i];
+  }
+
+  images.forEach((img) => {
+    let target = parsed[0];
+    for (const p of parsed) {
+      if (img.time >= (p.time || 0)) target = p;
+      else break;
+    }
+    if (!target.images) target.images = [];
+    target.images.push(img.path);
+  });
 
   const annotatedPath = await annotateChecklist(excelPath, parsed, originalName);
   return annotatedPath;
