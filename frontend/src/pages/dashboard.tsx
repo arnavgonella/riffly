@@ -143,15 +143,24 @@ export default function Dashboard() {
           </button>
         )
       ) : (
-        <button
-          onClick={() => {
-            setExcelFile(null);
-            setDownloadLink(null);
-          }}
-          className="bg-blue-600 text-white px-6 py-3 rounded"
-        >
-          📤 Upload New File
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={handleFileUpload}
+            className="bg-blue-600 text-white px-6 py-3 rounded w-full"
+          >
+            📤 Upload New File
+          </button>
+          <button
+            onClick={() => {
+              clear();
+              setDownloadLink(null);
+              startRecording();
+            }}
+            className="bg-green-600 text-white px-6 py-3 rounded w-full"
+          >
+            🎙️ Start New Recording
+          </button>
+        </div>
       )}
 
       {mediaBlob && !loading && !downloadLink && (
