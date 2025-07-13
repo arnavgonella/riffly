@@ -33,13 +33,30 @@ app.post('/upload', async (req, res) => {
   }
 
   const audioFile = req.files.audio;
+  const imageFilesRaw = req.files.images;
+  const timestampsRaw = req.body.timestamps;
   const ext = path.extname(audioFile.name) || '.webm';
   const fileName = `audio_${Date.now()}${ext}`;
   const savePath = path.join(uploadDir, fileName);
+  const imageFiles = imageFilesRaw
+    ? Array.isArray(imageFilesRaw)
+      ? imageFilesRaw
+      : [imageFilesRaw]
+    : [];
+  const timestamps = timestampsRaw ? JSON.parse(timestampsRaw) : [];
+  const savedImages = [];
 
   try {
     await audioFile.mv(savePath);
-    const checklistFile = await transcribeAndParse(savePath);
+    for (let i = 0; i < imageFiles.length; i++) {
+      const img = imageFiles[i];
+      const ext = path.extname(img.name) || '.jpg';
+      const name = `image_${Date.now()}_${i}${ext}`;
+      const imgPath = path.join(uploadDir, name);
+      await img.mv(imgPath);
+      savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
+    }
+    const checklistFile = await transcribeAndParse(savePath, savedImages);
     await addFile(userId, path.basename(checklistFile));
     res.json({ download: path.basename(checklistFile) });
   } catch (err) {
@@ -57,10 +74,20 @@ app.post('/annotate', async (req, res) => {
 
   const audioFile = req.files.audio;
   const excelFile = req.files.excel;
+  const imageFilesRaw = req.files.images;
+  const timestampsRaw = req.body.timestamps;
 
   const audioExt = path.extname(audioFile.name) || '.webm';
   const audioName = `audio_${Date.now()}${audioExt}`;
   const audioPath = path.join(uploadDir, audioName);
+
+  const imageFiles = imageFilesRaw
+    ? Array.isArray(imageFilesRaw)
+      ? imageFilesRaw
+      : [imageFilesRaw]
+    : [];
+  const timestamps = timestampsRaw ? JSON.parse(timestampsRaw) : [];
+  const savedImages = [];
 
   const excelBase = path.basename(excelFile.name);
   const excelExt = path.extname(excelBase) || '.xlsx';
@@ -70,7 +97,20 @@ app.post('/annotate', async (req, res) => {
   try {
     await audioFile.mv(audioPath);
     await excelFile.mv(excelPath);
-    const annotated = await transcribeAndAnnotate(audioPath, excelPath, excelBase);
+    for (let i = 0; i < imageFiles.length; i++) {
+      const img = imageFiles[i];
+      const ext = path.extname(img.name) || '.jpg';
+      const name = `image_${Date.now()}_${i}${ext}`;
+      const imgPath = path.join(uploadDir, name);
+      await img.mv(imgPath);
+      savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
+    }
+    const annotated = await transcribeAndAnnotate(
+      audioPath,
+      excelPath,
+      excelBase,
+      savedImages
+    );
     await addFile(userId, path.basename(annotated));
     res.json({ download: path.basename(annotated) });
   } catch (err) {

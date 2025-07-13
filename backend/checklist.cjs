@@ -1,5 +1,6 @@
 const ExcelJS = require('exceljs');
 const path = require('path');
+const fs = require('fs');
 
 function normalizeUnit(text) {
   const map = {
@@ -66,10 +67,26 @@ async function createChecklist(data) {
     { header: 'Part Number', key: 'part', width: 15 },
     { header: 'Measured Value', key: 'measured', width: 20 },
     { header: 'Unit', key: 'unit', width: 10 },
+    { header: 'Comment', key: 'comment', width: 30 },
   ];
 
-  data.forEach((entry) => {
-    sheet.addRow(entry);
+  data.forEach((entry, idx) => {
+    const row = sheet.addRow({
+      part: entry.part,
+      measured: entry.measured,
+      unit: entry.unit,
+      comment: '',
+    });
+    if (entry.images && entry.images.length > 0) {
+      const pageName = `images_${idx}_${Date.now()}.html`;
+      const pagePath = path.join(__dirname, 'uploads', pageName);
+      const imgs = entry.images
+        .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
+        .join('\n');
+      const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
+      fs.writeFileSync(pagePath, html);
+      row.getCell(4).value = { text: 'View Photos', hyperlink: pageName };
+    }
   });
 
   const filePath = path.join(
@@ -152,6 +169,19 @@ async function annotateChecklist(originalPath, data, originalName = null) {
               sheet.getRow(i).getCell(startCol + 2).value = 'In spec';
             }
           }
+        }
+        if (entry.images && entry.images.length > 0) {
+          const pageName = `images_${i - 1}_${Date.now()}.html`;
+          const pagePath = path.join(__dirname, 'uploads', pageName);
+          const imgs = entry.images
+            .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
+            .join('\n');
+          const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
+          fs.writeFileSync(pagePath, html);
+          sheet.getRow(i).getCell(startCol + 2).value = {
+            text: 'View Photos',
+            hyperlink: pageName,
+          };
         }
         break;
       }
