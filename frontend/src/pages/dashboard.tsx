@@ -2,6 +2,7 @@ import { useSession, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import useAudioRecorder from "@/lib/useAudioRecorder";
+import CameraModal from "@/components/CameraModal";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
@@ -23,6 +24,12 @@ export default function Dashboard() {
   const [history, setHistory] = useState<string[]>([]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos] = useState<{ blob: Blob; time: number }[]>([]);
+  const [recordStart, setRecordStart] = useState<number | null>(null);
+  const [captureMode, setCaptureMode] = useState<'environment' | 'user'>(
+    'environment'
+  );
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => {
     if (!session) router.replace("/login");
@@ -33,6 +40,8 @@ export default function Dashboard() {
     setLoading(true);
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
+    photos.forEach((p, i) => formData.append("images", p.blob, `photo_${i}.jpg`));
+    formData.append("timestamps", JSON.stringify(photos.map((p) => p.time)));
     formData.append("userId", user.id);
 
     try {
@@ -56,6 +65,8 @@ export default function Dashboard() {
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
     formData.append("excel", excelFile);
+    photos.forEach((p, i) => formData.append("images", p.blob, `photo_${i}.jpg`));
+    formData.append("timestamps", JSON.stringify(photos.map((p) => p.time)));
     formData.append("userId", user.id);
 
     try {
@@ -79,6 +90,17 @@ export default function Dashboard() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setExcelFile(e.target.files?.[0] || null);
+  };
+
+  const openCamera = () => {
+    setCameraOpen(true);
+  };
+
+  const onPhotoCaptured = (blob: Blob) => {
+    if (recordStart != null) {
+      const t = (Date.now() - recordStart) / 1000;
+      setPhotos((p) => [...p, { blob, time: t }]);
+    }
   };
 
   useEffect(() => {
@@ -135,6 +157,8 @@ export default function Dashboard() {
             onClick={() => {
               clear();
               setDownloadLink(null);
+              setPhotos([]);
+              setRecordStart(Date.now());
               startRecording();
             }}
             className="bg-blue-600 text-white px-6 py-3 rounded"
@@ -142,12 +166,20 @@ export default function Dashboard() {
             🎙️ Start Recording
           </button>
         ) : (
-          <button
-            onClick={stopRecording}
-            className="bg-red-600 text-white px-6 py-3 rounded"
-          >
-            ⏹️ Stop Recording
-          </button>
+          <>
+            <button
+              onClick={openCamera}
+              className="bg-yellow-600 text-white px-6 py-3 rounded mr-2"
+            >
+              📷 Take Photo
+            </button>
+            <button
+              onClick={stopRecording}
+              className="bg-red-600 text-white px-6 py-3 rounded"
+            >
+              ⏹️ Stop Recording
+            </button>
+          </>
         )
       ) : (
         <div className="flex flex-col items-center space-y-3">
@@ -169,6 +201,8 @@ export default function Dashboard() {
               onClick={() => {
                 clear();
                 setDownloadLink(null);
+                setPhotos([]);
+                setRecordStart(Date.now());
                 startRecording();
               }}
               className="bg-green-600 text-white px-6 py-3 rounded"
@@ -230,6 +264,15 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
+      <CameraModal
+        open={cameraOpen}
+        facingMode={captureMode}
+        onCapture={onPhotoCaptured}
+        onClose={() => setCameraOpen(false)}
+        onFlip={() =>
+          setCaptureMode((m) => (m === 'environment' ? 'user' : 'environment'))
+        }
+      />
     </main>
   );
 }
