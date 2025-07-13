@@ -161,6 +161,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             hyperlink: pageName,
           };
         }
+
         break;
       }
     }
