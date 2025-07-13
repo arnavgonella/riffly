@@ -87,16 +87,23 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
       {!downloadLink && (
-        <div className="mb-4">
-          <label className="block text-left mb-1 font-medium">
-            Excel file to annotate (optional):
-          </label>
+        <div className="mb-4 text-left">
           <input
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="block w-full border p-2"
+            id="excel-upload"
+            className="hidden"
           />
+          <label
+            htmlFor="excel-upload"
+            className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded cursor-pointer"
+          >
+            📤 Upload File
+          </label>
+          {excelFile && (
+            <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
+          )}
         </div>
       )}
 
