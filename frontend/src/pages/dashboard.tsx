@@ -95,17 +95,17 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
+      {/* Hidden file input - always rendered */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+
       {!downloadLink && (
         <div className="mb-4">
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-
           {/* Custom upload button */}
           <button
             type="button"
