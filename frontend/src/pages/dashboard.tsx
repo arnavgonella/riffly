@@ -96,6 +96,7 @@ export default function Dashboard() {
             className="hidden"
           />
           <button
+            type="button"
             onClick={() => document.getElementById("excel-upload")?.click()}
             className="bg-blue-600 text-white px-6 py-3 rounded"
           >
