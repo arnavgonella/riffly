@@ -74,10 +74,6 @@ export default function Dashboard() {
   };
 
   const handleFileUpload = () => {
-    // Clear any previous file selection when on completion screen
-    if (downloadLink) {
-      setExcelFile(null);
-    }
     fileInputRef.current?.click();
   };
 
@@ -92,6 +88,13 @@ export default function Dashboard() {
       .then((d) => setHistory(d.files ?? []))
       .catch(() => setHistory([]));
   }, [user]);
+
+  // Clear excel file when reaching completion screen
+  useEffect(() => {
+    if (downloadLink) {
+      setExcelFile(null);
+    }
+  }, [downloadLink]);
 
   if (!session) return null;
 
