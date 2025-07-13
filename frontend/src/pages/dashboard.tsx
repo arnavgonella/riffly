@@ -88,6 +88,7 @@ export default function Dashboard() {
 
       {!downloadLink && (
         <div className="mb-4">
+          {/* Fully hidden file input */}
           <input
             id="excel-upload"
             type="file"
@@ -95,6 +96,8 @@ export default function Dashboard() {
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
             className="hidden"
           />
+
+          {/* Visible upload button */}
           <button
             type="button"
             onClick={() => document.getElementById("excel-upload")?.click()}
@@ -102,6 +105,8 @@ export default function Dashboard() {
           >
             📤 Upload File
           </button>
+
+          {/* Optional file name preview */}
           {excelFile && (
             <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
           )}
