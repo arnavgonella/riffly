@@ -97,7 +97,7 @@ export default function Dashboard() {
           />
           <label
             htmlFor="excel-upload"
-            className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded cursor-pointer"
+            className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded cursor-pointer inline-block text-base"
           >
             📤 Upload File
           </label>
