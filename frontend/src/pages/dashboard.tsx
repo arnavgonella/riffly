@@ -86,17 +86,24 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
-      {!downloadLink && (
+      {!isRecording && (
         <div className="mb-4">
-          <label className="block text-left mb-1 font-medium">
-            Excel file to annotate (optional):
-          </label>
           <input
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="block w-full border p-2"
+            id="excel-upload"
+            style={{ display: "none" }}
           />
+          <label
+            htmlFor="excel-upload"
+            className="bg-blue-600 text-white px-6 py-3 rounded cursor-pointer inline-block"
+          >
+            {downloadLink ? "📤 Upload New File" : "📤 Upload File"}
+          </label>
+          {excelFile && (
+            <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
+          )}
         </div>
       )}
 
@@ -104,7 +111,7 @@ export default function Dashboard() {
         <button
           onClick={() => {
             clear();
-            setDownloadLink(null);
+            if (downloadLink) setDownloadLink(null);
             startRecording();
           }}
           className="bg-blue-600 text-white px-6 py-3 rounded"
