@@ -143,23 +143,32 @@ export default function Dashboard() {
           </button>
         )
       ) : (
-        <div className="space-y-3">
-          <button
-            onClick={handleFileUpload}
-            className="bg-blue-600 text-white px-6 py-3 rounded w-full"
-          >
-            📤 Upload New File
-          </button>
-          <button
-            onClick={() => {
-              clear();
-              setDownloadLink(null);
-              startRecording();
-            }}
-            className="bg-green-600 text-white px-6 py-3 rounded w-full"
-          >
-            🎙️ Start New Recording
-          </button>
+        <div className="flex flex-col items-center space-y-3">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleFileUpload}
+              className="bg-blue-600 text-white px-6 py-3 rounded"
+            >
+              📤 Upload New File
+            </button>
+            
+            {excelFile && (
+              <span className="text-sm text-gray-600">
+                Selected: {excelFile.name}
+              </span>
+            )}
+            
+            <button
+              onClick={() => {
+                clear();
+                setDownloadLink(null);
+                startRecording();
+              }}
+              className="bg-green-600 text-white px-6 py-3 rounded"
+            >
+              🎙️ Start New Recording
+            </button>
+          </div>
         </div>
       )}
 
@@ -193,11 +202,6 @@ export default function Dashboard() {
           >
             Download Excel Report
           </a>
-          
-          {/* Show uploaded file name if exists */}
-          {excelFile && (
-            <p className="mt-4 text-sm text-gray-600">Selected file: {excelFile.name}</p>
-          )}
         </div>
       )}
 
