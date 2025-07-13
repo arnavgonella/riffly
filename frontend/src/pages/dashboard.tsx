@@ -93,7 +93,7 @@ export default function Dashboard() {
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
             id="excel-upload"
-            style={{ display: "none" }}
+            className="hidden"
           />
           <label
             htmlFor="excel-upload"
