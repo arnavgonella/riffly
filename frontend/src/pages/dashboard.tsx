@@ -23,6 +23,10 @@ export default function Dashboard() {
   const [history, setHistory] = useState<string[]>([]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos] = useState<{ blob: Blob; time: number }[]>([]);
+  const [recordStart, setRecordStart] = useState<number | null>(null);
+  const [camStream, setCamStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!session) router.replace("/login");
@@ -33,6 +37,8 @@ export default function Dashboard() {
     setLoading(true);
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
+    photos.forEach((p, i) => formData.append("images", p.blob, `photo_${i}.jpg`));
+    formData.append("timestamps", JSON.stringify(photos.map((p) => p.time)));
     formData.append("userId", user.id);
 
     try {
@@ -56,6 +62,8 @@ export default function Dashboard() {
     const formData = new FormData();
     formData.append("audio", mediaBlob, "recording.wav");
     formData.append("excel", excelFile);
+    photos.forEach((p, i) => formData.append("images", p.blob, `photo_${i}.jpg`));
+    formData.append("timestamps", JSON.stringify(photos.map((p) => p.time)));
     formData.append("userId", user.id);
 
     try {
@@ -79,6 +87,41 @@ export default function Dashboard() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setExcelFile(e.target.files?.[0] || null);
+  };
+
+  const openCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    setCamStream(stream);
+  };
+
+  useEffect(() => {
+    if (!camStream || !videoRef.current) return;
+    const vid = videoRef.current;
+    vid.srcObject = camStream;
+    vid.play().catch(() => {});
+    return () => {
+      vid.pause();
+      vid.srcObject = null;
+    };
+  }, [camStream]);
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((b) => {
+        if (b && recordStart != null) {
+          const t = (Date.now() - recordStart) / 1000;
+          setPhotos((p) => [...p, { blob: b, time: t }]);
+        }
+      }, 'image/jpeg');
+    }
+    camStream?.getTracks().forEach((t) => t.stop());
+    setCamStream(null);
   };
 
   useEffect(() => {
@@ -135,6 +178,8 @@ export default function Dashboard() {
             onClick={() => {
               clear();
               setDownloadLink(null);
+              setPhotos([]);
+              setRecordStart(Date.now());
               startRecording();
             }}
             className="bg-blue-600 text-white px-6 py-3 rounded"
@@ -142,12 +187,23 @@ export default function Dashboard() {
             🎙️ Start Recording
           </button>
         ) : (
-          <button
-            onClick={stopRecording}
-            className="bg-red-600 text-white px-6 py-3 rounded"
-          >
-            ⏹️ Stop Recording
-          </button>
+          <>
+            <button
+              onClick={camStream ? capturePhoto : openCamera}
+              className="bg-yellow-600 text-white px-6 py-3 rounded mr-2"
+            >
+              {camStream ? '📸 Capture Photo' : '📷 Open Camera'}
+            </button>
+            <button
+              onClick={stopRecording}
+              className="bg-red-600 text-white px-6 py-3 rounded"
+            >
+              ⏹️ Stop Recording
+            </button>
+            {camStream && (
+              <video ref={videoRef} className="mt-2 w-full" />
+            )}
+          </>
         )
       ) : (
         <div className="flex flex-col items-center space-y-3">
@@ -169,6 +225,8 @@ export default function Dashboard() {
               onClick={() => {
                 clear();
                 setDownloadLink(null);
+                setPhotos([]);
+                setRecordStart(Date.now());
                 startRecording();
               }}
               className="bg-green-600 text-white px-6 py-3 rounded"

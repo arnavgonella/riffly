@@ -66,10 +66,28 @@ async function createChecklist(data) {
     { header: 'Part Number', key: 'part', width: 15 },
     { header: 'Measured Value', key: 'measured', width: 20 },
     { header: 'Unit', key: 'unit', width: 10 },
+    { header: 'Comment', key: 'comment', width: 30 },
   ];
 
-  data.forEach((entry) => {
-    sheet.addRow(entry);
+  data.forEach((entry, idx) => {
+    const row = sheet.addRow({
+      part: entry.part,
+      measured: entry.measured,
+      unit: entry.unit,
+      comment: '',
+    });
+    if (entry.images && entry.images.length > 0) {
+      const imgPath = entry.images[0];
+      const id = workbook.addImage({
+        filename: imgPath,
+        extension: path.extname(imgPath).slice(1),
+      });
+      sheet.addImage(id, {
+        tl: { col: 3, row: row.number - 1 },
+        ext: { width: 100, height: 100 },
+      });
+      row.height = 80;
+    }
   });
 
   const filePath = path.join(
@@ -152,6 +170,18 @@ async function annotateChecklist(originalPath, data, originalName = null) {
               sheet.getRow(i).getCell(startCol + 2).value = 'In spec';
             }
           }
+        }
+        if (entry.images && entry.images.length > 0) {
+          const imgPath = entry.images[0];
+          const id = workbook.addImage({
+            filename: imgPath,
+            extension: path.extname(imgPath).slice(1),
+          });
+          sheet.addImage(id, {
+            tl: { col: startCol + 2 - 1, row: i - 1 },
+            ext: { width: 100, height: 100 },
+          });
+          sheet.getRow(i).height = 80;
         }
         break;
       }
