@@ -4,32 +4,15 @@ const fs = require('fs');
 
 function normalizeUnit(text) {
   const map = {
-    millimeter: 'mm',
-    millimeters: 'mm',
-    mm: 'mm',
-    centimeter: 'cm',
-    centimeters: 'cm',
-    cm: 'cm',
-    meter: 'm',
-    meters: 'm',
-    m: 'm',
-    inch: 'in',
-    inches: 'in',
-    in: 'in',
-    foot: 'ft',
-    feet: 'ft',
-    ft: 'ft',
-    pound: 'lbs',
-    pounds: 'lbs',
-    lbs: 'lbs',
-    kilogram: 'kg',
-    kilograms: 'kg',
-    kg: 'kg',
-    gram: 'g',
-    grams: 'g',
-    g: 'g',
-    degree: '°',
-    degrees: '°',
+    millimeter: 'mm', millimeters: 'mm', mm: 'mm',
+    centimeter: 'cm', centimeters: 'cm', cm: 'cm',
+    meter: 'm', meters: 'm', m: 'm',
+    inch: 'in', inches: 'in', in: 'in',
+    foot: 'ft', feet: 'ft', ft: 'ft',
+    pound: 'lbs', pounds: 'lbs', lbs: 'lbs',
+    kilogram: 'kg', kilograms: 'kg', kg: 'kg',
+    gram: 'g', grams: 'g', g: 'g',
+    degree: '°', degrees: '°',
   };
   const cleaned = String(text || '').toLowerCase().trim();
   return map[cleaned] || cleaned;
@@ -77,6 +60,7 @@ async function createChecklist(data) {
       unit: entry.unit,
       comment: '',
     });
+
     if (entry.images && entry.images.length > 0) {
       const pageName = `images_${idx}_${Date.now()}.html`;
       const pagePath = path.join(__dirname, 'uploads', pageName);
@@ -89,11 +73,7 @@ async function createChecklist(data) {
     }
   });
 
-  const filePath = path.join(
-    __dirname,
-    'uploads',
-    `inspection_${Date.now()}.xlsx`
-  );
+  const filePath = path.join(__dirname, 'uploads', `inspection_${Date.now()}.xlsx`);
   await workbook.xlsx.writeFile(filePath);
   console.log('✅ Excel generated at:', filePath);
   return path.basename(filePath);
@@ -102,7 +82,6 @@ async function createChecklist(data) {
 async function annotateChecklist(originalPath, data, originalName = null) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(originalPath);
-
   const sheet = workbook.worksheets[0];
 
   const startCol = sheet.columnCount + 1;
@@ -110,16 +89,14 @@ async function annotateChecklist(originalPath, data, originalName = null) {
   sheet.getRow(1).getCell(startCol + 1).value = 'Recorded Unit';
   sheet.getRow(1).getCell(startCol + 2).value = 'Comment';
 
-  // detect relevant columns
   let partCol = 1;
   let dimCol = null;
   let unitCol = null;
   let tolCol = null;
+
   sheet.getRow(1).eachCell((cell, col) => {
     const header = String(cell.value || '').toLowerCase();
-
     if (header.includes('recorded') || header.includes('comment')) return;
-
     if (header.includes('part')) partCol = col;
     if (!dimCol && header.match(/dimension|target|nominal|value/)) dimCol = col;
     if (!unitCol && header.includes('unit')) unitCol = col;
@@ -143,7 +120,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
       if (
         cell &&
         String(cell).trim().toLowerCase() ===
-          String(entry.part).trim().toLowerCase()
+        String(entry.part).trim().toLowerCase()
       ) {
         let targetUnit = headerUnit;
         if (unitCol) {
@@ -170,6 +147,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             }
           }
         }
+
         if (entry.images && entry.images.length > 0) {
           const pageName = `images_${i - 1}_${Date.now()}.html`;
           const pagePath = path.join(__dirname, 'uploads', pageName);
@@ -183,6 +161,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             hyperlink: pageName,
           };
         }
+
         break;
       }
     }
@@ -190,11 +169,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
 
   const date = new Date().toLocaleDateString('en-US').replace(/\//g, '-');
   const baseName = originalName ? path.basename(originalName) : path.basename(originalPath);
-  const filePath = path.join(
-    __dirname,
-    'uploads',
-    `annotated_${date}_${baseName}`
-  );
+  const filePath = path.join(__dirname, 'uploads', `annotated_${date}_${baseName}`);
 
   await workbook.xlsx.writeFile(filePath);
   console.log('✅ Annotated Excel created at:', filePath);

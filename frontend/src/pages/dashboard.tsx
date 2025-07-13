@@ -26,9 +26,7 @@ export default function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<{ blob: Blob; time: number }[]>([]);
   const [recordStart, setRecordStart] = useState<number | null>(null);
-  const [captureMode, setCaptureMode] = useState<'environment' | 'user'>(
-    'environment'
-  );
+  const [captureMode, setCaptureMode] = useState<'environment' | 'user'>('environment');
   const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => {
@@ -84,18 +82,12 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const handleFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
+  const handleFileUpload = () => fileInputRef.current?.click();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setExcelFile(e.target.files?.[0] || null);
   };
 
-  const openCamera = () => {
-    setCameraOpen(true);
-  };
-
+  const openCamera = () => setCameraOpen(true);
   const onPhotoCaptured = (blob: Blob) => {
     if (recordStart != null) {
       const t = (Date.now() - recordStart) / 1000;
@@ -111,11 +103,8 @@ export default function Dashboard() {
       .catch(() => setHistory([]));
   }, [user]);
 
-  // Clear excel file when reaching completion screen
   useEffect(() => {
-    if (downloadLink) {
-      setExcelFile(null);
-    }
+    if (downloadLink) setExcelFile(null);
   }, [downloadLink]);
 
   if (!session) return null;
@@ -124,30 +113,20 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
-      {/* Hidden file input - always rendered */}
       <input
         ref={fileInputRef}
         type="file"
         accept=".xlsx"
         onChange={handleFileChange}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
 
       {!downloadLink && (
         <div className="mb-4">
-          {/* Custom upload button */}
-          <button
-            type="button"
-            onClick={handleFileUpload}
-            className="bg-blue-600 text-white px-6 py-3 rounded mb-4"
-          >
+          <button onClick={handleFileUpload} className="bg-blue-600 text-white px-6 py-3 rounded mb-4">
             📤 Upload File
           </button>
-
-          {/* Optional file name preview */}
-          {excelFile && (
-            <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
-          )}
+          {excelFile && <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>}
         </div>
       )}
 
@@ -184,19 +163,10 @@ export default function Dashboard() {
       ) : (
         <div className="flex flex-col items-center space-y-3">
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleFileUpload}
-              className="bg-blue-600 text-white px-6 py-3 rounded"
-            >
+            <button onClick={handleFileUpload} className="bg-blue-600 text-white px-6 py-3 rounded">
               📤 Upload New File
             </button>
-            
-            {excelFile && (
-              <span className="text-sm text-gray-600">
-                Selected: {excelFile.name}
-              </span>
-            )}
-            
+            {excelFile && <span className="text-sm text-gray-600">Selected: {excelFile.name}</span>}
             <button
               onClick={() => {
                 clear();
@@ -215,10 +185,7 @@ export default function Dashboard() {
 
       {mediaBlob && !loading && !downloadLink && (
         <div className="mt-4 space-y-3">
-          <button
-            onClick={handleUpload}
-            className="bg-black text-white px-6 py-3 rounded w-full"
-          >
+          <button onClick={handleUpload} className="bg-black text-white px-6 py-3 rounded w-full">
             ⬆️ Upload & Generate Excel
           </button>
           <button
@@ -236,11 +203,7 @@ export default function Dashboard() {
       {downloadLink && (
         <div className="mt-6">
           <p className="text-green-600 font-semibold">✅ Inspection complete!</p>
-          <a
-            href={`${API_BASE}/uploads/${downloadLink}`}
-            download
-            className="text-blue-600 underline"
-          >
+          <a href={`${API_BASE}/uploads/${downloadLink}`} download className="text-blue-600 underline">
             Download Excel Report
           </a>
         </div>
@@ -252,11 +215,7 @@ export default function Dashboard() {
           <ul className="list-disc list-inside">
             {history.map((f) => (
               <li key={f} className="my-1">
-                <a
-                  href={`${API_BASE}/uploads/${f}`}
-                  download
-                  className="text-blue-600 underline"
-                >
+                <a href={`${API_BASE}/uploads/${f}`} download className="text-blue-600 underline">
                   {f}
                 </a>
               </li>
@@ -264,14 +223,13 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
+
       <CameraModal
         open={cameraOpen}
         facingMode={captureMode}
         onCapture={onPhotoCaptured}
         onClose={() => setCameraOpen(false)}
-        onFlip={() =>
-          setCaptureMode((m) => (m === 'environment' ? 'user' : 'environment'))
-        }
+        onFlip={() => setCaptureMode((m) => (m === 'environment' ? 'user' : 'environment'))}
       />
     </main>
   );
