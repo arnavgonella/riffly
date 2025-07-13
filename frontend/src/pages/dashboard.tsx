@@ -88,35 +88,54 @@ export default function Dashboard() {
 
       {!downloadLink && (
         <div className="mb-4">
-          <label className="block text-left mb-1 font-medium">
-            Excel file to annotate (optional):
-          </label>
           <input
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="block w-full border p-2"
+            id="excel-upload"
+            style={{ display: "none" }}
           />
+          <label
+            htmlFor="excel-upload"
+            className="bg-blue-600 text-white px-6 py-3 rounded cursor-pointer inline-block"
+          >
+            📤 Upload File
+          </label>
+          {excelFile && (
+            <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
+          )}
         </div>
       )}
 
-      {!isRecording ? (
+      {!downloadLink ? (
+        !isRecording ? (
+          <button
+            onClick={() => {
+              clear();
+              setDownloadLink(null);
+              startRecording();
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded"
+          >
+            🎙️ Start Recording
+          </button>
+        ) : (
+          <button
+            onClick={stopRecording}
+            className="bg-red-600 text-white px-6 py-3 rounded"
+          >
+            ⏹️ Stop Recording
+          </button>
+        )
+      ) : (
         <button
           onClick={() => {
-            clear();
+            setExcelFile(null);
             setDownloadLink(null);
-            startRecording();
           }}
           className="bg-blue-600 text-white px-6 py-3 rounded"
         >
-          🎙️ Start Recording
-        </button>
-      ) : (
-        <button
-          onClick={stopRecording}
-          className="bg-red-600 text-white px-6 py-3 rounded"
-        >
-          ⏹️ Stop Recording
+          📤 Upload New File
         </button>
       )}
 
