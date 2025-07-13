@@ -1,5 +1,7 @@
 const ExcelJS = require('exceljs');
 const path = require('path');
+const fs = require('fs');
+const DEFAULT_BASE_URL = process.env.BACKEND_PUBLIC_URL || 'http://localhost:3001';
 
 function normalizeUnit(text) {
   const map = {
@@ -58,7 +60,7 @@ function parseNumber(val) {
   return match ? parseFloat(match[0]) : NaN;
 }
 
-async function createChecklist(data) {
+async function createChecklist(data, baseUrl = DEFAULT_BASE_URL) {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Inspection Results');
 
@@ -66,10 +68,29 @@ async function createChecklist(data) {
     { header: 'Part Number', key: 'part', width: 15 },
     { header: 'Measured Value', key: 'measured', width: 20 },
     { header: 'Unit', key: 'unit', width: 10 },
+    { header: 'Comment', key: 'comment', width: 30 },
   ];
 
-  data.forEach((entry) => {
-    sheet.addRow(entry);
+  data.forEach((entry, idx) => {
+    const row = sheet.addRow({
+      part: entry.part,
+      measured: entry.measured,
+      unit: entry.unit,
+      comment: '',
+    });
+    if (entry.images && entry.images.length > 0) {
+      const pageName = `images_${idx}_${Date.now()}.html`;
+      const pagePath = path.join(__dirname, 'uploads', pageName);
+      const imgs = entry.images
+        .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
+        .join('\n');
+      const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
+      fs.writeFileSync(pagePath, html);
+      row.getCell(4).value = {
+        text: 'View Photos',
+        hyperlink: `${baseUrl}/uploads/${pageName}`,
+      };
+    }
   });
 
   const filePath = path.join(
@@ -82,7 +103,7 @@ async function createChecklist(data) {
   return path.basename(filePath);
 }
 
-async function annotateChecklist(originalPath, data, originalName = null) {
+async function annotateChecklist(originalPath, data, originalName = null, baseUrl = DEFAULT_BASE_URL) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(originalPath);
 
@@ -139,6 +160,7 @@ async function annotateChecklist(originalPath, data, originalName = null) {
         sheet.getRow(i).getCell(startCol).value = measured;
         sheet.getRow(i).getCell(startCol + 1).value = targetUnit;
 
+        let specText = '';
         if (tolCol && dimCol) {
           const targetVal = parseNumber(sheet.getRow(i).getCell(dimCol).value);
           const tolVal = parseNumber(sheet.getRow(i).getCell(tolCol).value);
@@ -147,11 +169,28 @@ async function annotateChecklist(originalPath, data, originalName = null) {
             const upper = targetVal + tolVal;
             if (measured < lower || measured > upper) {
               const diff = measured < lower ? lower - measured : measured - upper;
-              sheet.getRow(i).getCell(startCol + 2).value = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
+              specText = `Out of spec by ${diff.toFixed(2)} ${targetUnit}`;
             } else {
-              sheet.getRow(i).getCell(startCol + 2).value = 'In spec';
+              specText = 'In spec';
             }
           }
+        }
+        if (specText) {
+          sheet.getRow(i).getCell(startCol + 2).value = specText;
+        }
+        if (entry.images && entry.images.length > 0) {
+          const pageName = `images_${i - 1}_${Date.now()}.html`;
+          const pagePath = path.join(__dirname, 'uploads', pageName);
+          const imgs = entry.images
+            .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
+            .join('\n');
+          const html = `<!DOCTYPE html><html><body>${imgs}</body></html>`;
+          fs.writeFileSync(pagePath, html);
+          const cell = sheet.getRow(i).getCell(startCol + 2);
+          const text =
+            (typeof cell.value === 'string' && cell.value) || 'View Photos';
+          cell.value = { text, hyperlink: `${baseUrl}/uploads/${pageName}` };
+          cell.font = { color: { argb: 'FF0000FF' }, underline: true };
         }
         break;
       }
