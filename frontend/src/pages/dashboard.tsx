@@ -87,17 +87,17 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
       {!downloadLink && (
-        <div className="mb-4 text-left">
+        <div className="mb-4">
           <input
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
             id="excel-upload"
-            className="hidden"
+            style={{ display: "none" }}
           />
           <label
             htmlFor="excel-upload"
-            className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded cursor-pointer inline-block text-base"
+            className="bg-blue-600 text-white px-6 py-3 rounded cursor-pointer inline-block"
           >
             📤 Upload File
           </label>
@@ -133,7 +133,7 @@ export default function Dashboard() {
             setExcelFile(null);
             setDownloadLink(null);
           }}
-          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded"
+          className="bg-blue-600 text-white px-6 py-3 rounded"
         >
           📤 Upload New File
         </button>
