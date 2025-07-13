@@ -1,6 +1,6 @@
 import { useSession, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import useAudioRecorder from "@/lib/useAudioRecorder";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!session) router.replace("/login");
@@ -72,6 +73,14 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setExcelFile(e.target.files?.[0] || null);
+  };
+
   useEffect(() => {
     if (!user) return;
     fetch(`${API_BASE}/files/${user.id}`)
@@ -88,20 +97,20 @@ export default function Dashboard() {
 
       {!downloadLink && (
         <div className="mb-4">
-          {/* Fully hidden file input */}
+          {/* Hidden file input */}
           <input
-            id="excel-upload"
+            ref={fileInputRef}
             type="file"
             accept=".xlsx"
-            onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="hidden"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
           />
 
-          {/* Visible upload button */}
+          {/* Custom upload button */}
           <button
             type="button"
-            onClick={() => document.getElementById("excel-upload")?.click()}
-            className="bg-blue-600 text-white px-6 py-3 rounded"
+            onClick={handleFileUpload}
+            className="bg-blue-600 text-white px-6 py-3 rounded mb-4"
           >
             📤 Upload File
           </button>
