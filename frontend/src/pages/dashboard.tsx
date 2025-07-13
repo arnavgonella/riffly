@@ -2,6 +2,7 @@ import { useSession, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import useAudioRecorder from "@/lib/useAudioRecorder";
+import CameraModal from "@/components/CameraModal";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
@@ -23,12 +24,10 @@ export default function Dashboard() {
   const [history, setHistory] = useState<string[]>([]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const filePhotoRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<{ blob: Blob; time: number }[]>([]);
   const [recordStart, setRecordStart] = useState<number | null>(null);
-  const [captureMode, setCaptureMode] = useState<"environment" | "user">("environment");
-  const [camStream, setCamStream] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [captureMode, setCaptureMode] = useState<'environment' | 'user'>('environment');
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => {
     if (!session) router.replace("/login");
@@ -88,44 +87,12 @@ export default function Dashboard() {
     setExcelFile(e.target.files?.[0] || null);
   };
 
-  const openCameraFile = () => filePhotoRef.current?.click();
-  const flipCamera = () => setCaptureMode((m) => (m === "environment" ? "user" : "environment"));
-
-  const onPhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && recordStart != null) {
+  const openCamera = () => setCameraOpen(true);
+  const onPhotoCaptured = (blob: Blob) => {
+    if (recordStart != null) {
       const t = (Date.now() - recordStart) / 1000;
-      setPhotos((p) => [...p, { blob: file, time: t }]);
+      setPhotos((p) => [...p, { blob, time: t }]);
     }
-    e.target.value = "";
-  };
-
-  const openCameraWeb = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-    }
-    setCamStream(stream);
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((b) => {
-        if (b && recordStart != null) {
-          const t = (Date.now() - recordStart) / 1000;
-          setPhotos((p) => [...p, { blob: b, time: t }]);
-        }
-      }, "image/jpeg");
-    }
-    camStream?.getTracks().forEach((t) => t.stop());
-    setCamStream(null);
   };
 
   useEffect(() => {
@@ -137,17 +104,6 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    if (!camStream || !videoRef.current) return;
-    const vid = videoRef.current;
-    vid.srcObject = camStream;
-    vid.play().catch(() => {});
-    return () => {
-      vid.pause();
-      vid.srcObject = null;
-    };
-  }, [camStream]);
-
-  useEffect(() => {
     if (downloadLink) setExcelFile(null);
   }, [downloadLink]);
 
@@ -157,14 +113,11 @@ export default function Dashboard() {
     <main className="p-6 max-w-xl mx-auto mt-10 text-center font-sans">
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
-      {/* Hidden inputs */}
-      <input ref={fileInputRef} type="file" accept=".xlsx" onChange={handleFileChange} style={{ display: "none" }} />
       <input
-        ref={filePhotoRef}
+        ref={fileInputRef}
         type="file"
-        accept="image/*"
-        capture={captureMode}
-        onChange={onPhotoSelected}
+        accept=".xlsx"
+        onChange={handleFileChange}
         style={{ display: "none" }}
       />
 
@@ -193,19 +146,18 @@ export default function Dashboard() {
           </button>
         ) : (
           <>
-            <button onClick={openCameraFile} className="bg-yellow-600 text-white px-6 py-3 rounded mr-2">
-              📷 Take Photo (File)
+            <button
+              onClick={openCamera}
+              className="bg-yellow-600 text-white px-6 py-3 rounded mr-2"
+            >
+              📷 Take Photo
             </button>
-            <button onClick={flipCamera} className="bg-gray-600 text-white px-6 py-3 rounded mr-2">
-              🔄 Flip Camera
-            </button>
-            <button onClick={camStream ? capturePhoto : openCameraWeb} className="bg-yellow-600 text-white px-6 py-3 rounded mr-2">
-              {camStream ? "📸 Capture Photo" : "🎥 Open Camera"}
-            </button>
-            <button onClick={stopRecording} className="bg-red-600 text-white px-6 py-3 rounded">
+            <button
+              onClick={stopRecording}
+              className="bg-red-600 text-white px-6 py-3 rounded"
+            >
               ⏹️ Stop Recording
             </button>
-            {camStream && <video ref={videoRef} className="mt-2 w-full" />}
           </>
         )
       ) : (
@@ -271,6 +223,14 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
+
+      <CameraModal
+        open={cameraOpen}
+        facingMode={captureMode}
+        onCapture={onPhotoCaptured}
+        onClose={() => setCameraOpen(false)}
+        onFlip={() => setCaptureMode((m) => (m === 'environment' ? 'user' : 'environment'))}
+      />
     </main>
   );
 }
