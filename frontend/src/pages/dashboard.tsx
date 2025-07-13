@@ -89,18 +89,18 @@ export default function Dashboard() {
       {!downloadLink && (
         <div className="mb-4">
           <input
+            id="excel-upload"
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            id="excel-upload"
             className="hidden"
           />
-          <label
-            htmlFor="excel-upload"
-            className="bg-blue-600 text-white px-6 py-3 rounded cursor-pointer inline-block"
+          <button
+            onClick={() => document.getElementById("excel-upload")?.click()}
+            className="bg-blue-600 text-white px-6 py-3 rounded"
           >
             📤 Upload File
-          </label>
+          </button>
           {excelFile && (
             <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
           )}
