@@ -87,36 +87,55 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold mb-4">Welcome, {user?.email}</h1>
 
       {!downloadLink && (
-        <div className="mb-4">
-          <label className="block text-left mb-1 font-medium">
-            Excel file to annotate (optional):
-          </label>
+        <div className="mb-4 text-left">
           <input
             type="file"
             accept=".xlsx"
             onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-            className="block w-full border p-2"
+            id="excel-upload"
+            style={{ display: "none" }}
           />
+          <label
+            htmlFor="excel-upload"
+            className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded cursor-pointer inline-block text-base"
+          >
+            📤 Upload File
+          </label>
+          {excelFile && (
+            <p className="mt-2 text-sm text-gray-600">{excelFile.name}</p>
+          )}
         </div>
       )}
 
-      {!isRecording ? (
-        <button
-          onClick={() => {
-            clear();
-            setDownloadLink(null);
-            startRecording();
-          }}
-          className="bg-blue-600 text-white px-6 py-3 rounded"
-        >
-          🎙️ Start Recording
-        </button>
+      {!downloadLink ? (
+        !isRecording ? (
+          <button
+            onClick={() => {
+              clear();
+              setDownloadLink(null);
+              startRecording();
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded"
+          >
+            🎙️ Start Recording
+          </button>
+        ) : (
+          <button
+            onClick={stopRecording}
+            className="bg-red-600 text-white px-6 py-3 rounded"
+          >
+            ⏹️ Stop Recording
+          </button>
+        )
       ) : (
         <button
-          onClick={stopRecording}
-          className="bg-red-600 text-white px-6 py-3 rounded"
+          onClick={() => {
+            setExcelFile(null);
+            setDownloadLink(null);
+          }}
+          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded"
         >
-          ⏹️ Stop Recording
+          📤 Upload New File
         </button>
       )}
 
