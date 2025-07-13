@@ -87,22 +87,28 @@ export default function CameraModal({
       <video ref={videoRef} className="w-full max-w-md" playsInline muted />
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {captured && <p className="text-green-400 mt-2">Photo captured!</p>}
-      <div className="mt-6 flex justify-around items-center w-full px-8">
-        <button onClick={onFlip} className="text-white text-[12vw] p-4">
+
+      <div className="mt-6 flex justify-around items-center w-full px-4">
+        <button
+          onClick={onFlip}
+          className="text-white text-[12vw] p-[4vw]"
+        >
           🔄
         </button>
+
         <button
           onClick={capture}
-          className="w-[22vw] h-[22vw] bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-[10vw] text-black"
+          className="w-[20vw] h-[20vw] bg-white rounded-full border-4 border-gray-300 flex items-center justify-center text-[10vw] text-black"
         >
           📸
         </button>
+
         <button
           onClick={() => {
             streamRef.current?.getTracks().forEach((t) => t.stop());
             onClose();
           }}
-          className="text-white text-[12vw] p-4"
+          className="text-white text-[12vw] p-[4vw]"
         >
           ✖
         </button>
