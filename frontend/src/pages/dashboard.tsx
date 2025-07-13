@@ -169,6 +169,17 @@ export default function Dashboard() {
           >
             Download Excel Report
           </a>
+          <div className="mt-2">
+            <button
+              onClick={() => {
+                setExcelFile(null);
+                setDownloadLink(null);
+              }}
+              className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
+            >
+              📤 Upload Excel
+            </button>
+          </div>
         </div>
       )}
 
