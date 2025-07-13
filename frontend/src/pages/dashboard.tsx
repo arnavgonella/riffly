@@ -193,6 +193,11 @@ export default function Dashboard() {
           >
             Download Excel Report
           </a>
+          
+          {/* Show uploaded file name if exists */}
+          {excelFile && (
+            <p className="mt-4 text-sm text-gray-600">Selected file: {excelFile.name}</p>
+          )}
         </div>
       )}
 
