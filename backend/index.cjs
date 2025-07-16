@@ -23,7 +23,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Remove expired files on startup
 cleanupOldFiles();
 
 app.post('/upload', async (req, res) => {
