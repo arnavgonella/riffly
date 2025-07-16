@@ -54,7 +54,7 @@ export default function NewRiffRecorder({ onUpload }: Props) {
     const formData = new FormData();
     formData.append("username", username || "anonymous");
     formData.append("caption", caption);
-    formData.append("file", file); // parent_id omitted = root riff
+    formData.append("file", file);
 
     setUploading(true);
     try {
