@@ -153,10 +153,15 @@ function parseTranscript(rawText) {
   return results;
 }
 
-async function transcribeAndParse(filePath, images = [], baseUrl = null) {
-  console.log('🔊 Received file:', filePath);
+async function transcribeAndParse(fileUrl, images = [], baseUrl = null) {
+  console.log('🔊 Received file:', fileUrl);
+  const response = await fetch(fileUrl);
+  if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`);
+  const blob = await response.blob();
+  const file = new File([blob], new URL(fileUrl).pathname.split('/').pop(), { type: blob.type });
+
   const transcription = await openai.audio.transcriptions.create({
-    file: fs.createReadStream(filePath),
+    file,
     model: 'whisper-1',
     response_format: 'verbose_json',
   });
@@ -181,26 +186,44 @@ async function transcribeAndParse(filePath, images = [], baseUrl = null) {
     parsed[i].time = partTimes[i];
   }
 
-  images.forEach((img) => {
-    let target = parsed[0];
-    for (const p of parsed) {
-      if (img.time >= (p.time || 0)) target = p;
-      else break;
-    }
-    if (!target.images) target.images = [];
-    target.images.push(img.path);
-  });
+  if (parsed.length > 0) {
+    images.forEach((img) => {
+      let target = parsed[0];
+      for (const p of parsed) {
+        if (img.time >= (p.time || 0)) target = p;
+        else break;
+      }
+      if (!target.images) target.images = [];
+      target.images.push(img.path);
+    });
+  }
 
   return await createChecklist(parsed, baseUrl);
 }
 
-async function transcribeAndAnnotate(audioPath, excelPath, originalName, images = [], baseUrl = null) {
-  console.log('🔊 Received files:', audioPath, excelPath);
+async function transcribeAndAnnotate(audioUrl, excelUrl, originalName, images = [], baseUrl = null) {
+  console.log('🔊 Received files:', audioUrl, excelUrl);
+
+  // Transcribe audio from URL
+  const audioResponse = await fetch(audioUrl);
+  if (!audioResponse.ok) throw new Error(`Failed to fetch audio: ${audioResponse.statusText}`);
+  const audioBlob = await audioResponse.blob();
+  const audioFile = new File([audioBlob], new URL(audioUrl).pathname.split('/').pop(), { type: audioBlob.type });
+
   const transcription = await openai.audio.transcriptions.create({
-    file: fs.createReadStream(audioPath),
+    file: audioFile,
     model: 'whisper-1',
     response_format: 'verbose_json',
   });
+
+  // Download Excel file to a temporary path
+  const excelResponse = await fetch(excelUrl);
+  if (!excelResponse.ok) throw new Error(`Failed to fetch excel: ${excelResponse.statusText}`);
+  const excelBuffer = await excelResponse.arrayBuffer();
+  const tempDir = './temp';
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+  const tempExcelPath = `${tempDir}/${originalName}`;
+  fs.writeFileSync(tempExcelPath, Buffer.from(excelBuffer));
 
   const rawText = transcription.text.trim();
   console.log('📝 Transcript:', rawText);
@@ -222,17 +245,21 @@ async function transcribeAndAnnotate(audioPath, excelPath, originalName, images 
     parsed[i].time = partTimes[i];
   }
 
-  images.forEach((img) => {
-    let target = parsed[0];
-    for (const p of parsed) {
-      if (img.time >= (p.time || 0)) target = p;
-      else break;
-    }
-    if (!target.images) target.images = [];
-    target.images.push(img.path);
-  });
+  if (parsed.length > 0) {
+    images.forEach((img) => {
+      let target = parsed[0];
+      for (const p of parsed) {
+        if (img.time >= (p.time || 0)) target = p;
+        else break;
+      }
+      if (!target.images) target.images = [];
+      target.images.push(img.path);
+    });
+  }
 
-  return await annotateChecklist(excelPath, parsed, originalName, baseUrl);
+  const result = await annotateChecklist(tempExcelPath, parsed, originalName, baseUrl);
+  fs.unlinkSync(tempExcelPath); // Clean up temporary file
+  return result;
 }
 
 module.exports = { transcribeAndParse, transcribeAndAnnotate };

@@ -6,24 +6,16 @@ dotenv.config();
 
 const fs = require('fs');
 const path = require('path');
+const { supabase } = require('./supabaseClient.cjs');
 const { transcribeAndParse, transcribeAndAnnotate } = require('./transcription.cjs');
-const { addFile, getFiles, cleanupOldFiles } = require('./db.cjs');
+const { addFile, getFiles } = require('./db.cjs');
 
 const app = express();
 const PORT = 3001;
-const uploadDir = path.join(__dirname, 'uploads');
 
 app.use(cors());
 app.use(fileUpload());
 app.use(express.json());
-app.use('/uploads', express.static(uploadDir));
-
-// Ensure uploads folder exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-cleanupOldFiles();
 
 app.post('/upload', async (req, res) => {
   const userId = req.body.userId;
@@ -38,7 +30,6 @@ app.post('/upload', async (req, res) => {
 
   const ext = path.extname(audioFile.name) || '.webm';
   const fileName = `audio_${Date.now()}${ext}`;
-  const savePath = path.join(uploadDir, fileName);
   const imageFiles = imageFilesRaw
     ? Array.isArray(imageFilesRaw)
       ? imageFilesRaw
@@ -48,22 +39,41 @@ app.post('/upload', async (req, res) => {
   const savedImages = [];
 
   try {
-    await audioFile.mv(savePath);
+    const { data: audioData, error: audioError } = await supabase.storage
+      .from('files')
+      .upload(`${userId}/${fileName}`, audioFile.data, {
+        contentType: audioFile.mimetype,
+      });
+    if (audioError) throw audioError;
 
     for (let i = 0; i < imageFiles.length; i++) {
       const img = imageFiles[i];
       const ext = path.extname(img.name) || '.jpg';
       const name = `image_${Date.now()}_${i}${ext}`;
-      const imgPath = path.join(uploadDir, name);
-      await img.mv(imgPath);
-      savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
+      const { data: imgData, error: imgError } = await supabase.storage
+        .from('files')
+        .upload(`${userId}/${name}`, img.data, { contentType: img.mimetype });
+      if (imgError) throw imgError;
+
+      const { data: publicUrlData } = supabase.storage.from('files').getPublicUrl(`${userId}/${name}`);
+      savedImages.push({ path: publicUrlData.publicUrl, time: Number(timestamps[i] || 0) });
     }
 
-    const baseUrl = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
-    const checklistFile = await transcribeAndParse(savePath, savedImages, baseUrl);
-    await addFile(userId, path.basename(checklistFile));
+    const { data: publicUrlData } = supabase.storage.from('files').getPublicUrl(`${userId}/${fileName}`);
+    const checklistFile = await transcribeAndParse(publicUrlData.publicUrl, savedImages);
+    const checklistContent = fs.readFileSync(checklistFile);
+    const checklistName = path.basename(checklistFile);
 
-    res.json({ download: path.basename(checklistFile) });
+    const { data: checklistData, error: checklistError } = await supabase.storage
+      .from('files')
+      .upload(`${userId}/${checklistName}`, checklistContent, {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+    if (checklistError) throw checklistError;
+
+    await addFile(userId, checklistName);
+
+    res.json({ download: checklistName });
   } catch (err) {
     console.error('❌ Upload or processing failed:', err);
     res.status(500).json({ error: 'Failed to process file.' });
@@ -84,7 +94,6 @@ app.post('/annotate', async (req, res) => {
 
   const audioExt = path.extname(audioFile.name) || '.webm';
   const audioName = `audio_${Date.now()}${audioExt}`;
-  const audioPath = path.join(uploadDir, audioName);
 
   const imageFiles = imageFilesRaw
     ? Array.isArray(imageFilesRaw)
@@ -96,26 +105,55 @@ app.post('/annotate', async (req, res) => {
 
   const excelBase = path.basename(excelFile.name);
   const excelName = `upload_${Date.now()}_${excelBase}`;
-  const excelPath = path.join(uploadDir, excelName);
 
   try {
-    await audioFile.mv(audioPath);
-    await excelFile.mv(excelPath);
+    const { data: audioData, error: audioError } = await supabase.storage
+      .from('files')
+      .upload(`${userId}/${audioName}`, audioFile.data, {
+        contentType: audioFile.mimetype,
+      });
+    if (audioError) throw audioError;
+
+    const { data: excelData, error: excelError } = await supabase.storage
+      .from('files')
+      .upload(`${userId}/${excelName}`, excelFile.data, {
+        contentType: excelFile.mimetype,
+      });
+    if (excelError) throw excelError;
 
     for (let i = 0; i < imageFiles.length; i++) {
       const img = imageFiles[i];
       const ext = path.extname(img.name) || '.jpg';
       const name = `image_${Date.now()}_${i}${ext}`;
-      const imgPath = path.join(uploadDir, name);
-      await img.mv(imgPath);
-      savedImages.push({ path: imgPath, time: Number(timestamps[i] || 0) });
+      const { data: imgData, error: imgError } = await supabase.storage
+        .from('files')
+        .upload(`${userId}/${name}`, img.data, { contentType: img.mimetype });
+      if (imgError) throw imgError;
+
+      const { data: publicUrlData } = supabase.storage.from('files').getPublicUrl(`${userId}/${name}`);
+      savedImages.push({ path: publicUrlData.publicUrl, time: Number(timestamps[i] || 0) });
     }
 
-    const baseUrl = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
-    const annotated = await transcribeAndAnnotate(audioPath, excelPath, excelBase, savedImages, baseUrl);
+    const { data: audioPublicUrl } = supabase.storage.from('files').getPublicUrl(`${userId}/${audioName}`);
+    const { data: excelPublicUrl } = supabase.storage.from('files').getPublicUrl(`${userId}/${excelName}`);
 
-    await addFile(userId, path.basename(annotated));
-    res.json({ download: path.basename(annotated) });
+    const annotated = await transcribeAndAnnotate(
+      audioPublicUrl.publicUrl,
+      excelPublicUrl.publicUrl,
+      excelBase,
+      savedImages
+    );
+    const annotatedContent = fs.readFileSync(annotated);
+    const annotatedName = path.basename(annotated);
+
+    const { data: annotatedData, error: annotatedError } = await supabase.storage
+      .from('files')
+      .upload(`${userId}/${annotatedName}`, annotatedContent, {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+    await addFile(userId, annotatedName);
+    res.json({ download: annotatedName });
   } catch (err) {
     console.error('❌ Annotation failed:', err);
     res.status(500).json({ error: 'Failed to annotate.' });
@@ -124,14 +162,16 @@ app.post('/annotate', async (req, res) => {
 
 app.get('/files/:userId', async (req, res) => {
   try {
-    cleanupOldFiles();
-    const rows = await getFiles(req.params.userId);
-    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const files = rows
-      .filter((r) => r.created_at >= cutoff)
-      .map((r) => r.file_name);
+    const { data, error } = await supabase.storage.from('files').list(req.params.userId);
+    if (error) throw error;
+
+    const files = data
+      .filter((f) => f.name.startsWith('annotated'))
+      .map((f) => f.name);
+
     res.json({ files });
-  } catch {
+  } catch (err) {
+    console.error('Error fetching files:', err);
     res.status(500).json({ error: 'Failed to fetch files' });
   }
 });

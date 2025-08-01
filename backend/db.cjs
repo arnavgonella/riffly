@@ -1,15 +1,7 @@
 const Database = require("better-sqlite3");
 const path = require("path");
-const fs = require("fs");
 
 const dbPath = path.join(__dirname, "files.db");
-const uploadsDir = path.join(__dirname, "uploads");
-
-// Ensure uploads folder exists
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-
 const db = new Database(dbPath);
 
 // Initialize DB
@@ -37,22 +29,8 @@ function deleteFileRecord(fileName) {
   stmt.run(fileName);
 }
 
-function cleanupOldFiles() {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-
-  const oldFiles = db.prepare("SELECT * FROM files WHERE created_at < ?").all(cutoff);
-
-  oldFiles.forEach((r) => {
-    const filePath = path.join(uploadsDir, r.file_name);
-    fs.unlink(filePath, () => {});
-  });
-
-  db.prepare("DELETE FROM files WHERE created_at < ?").run(cutoff);
-}
-
 module.exports = {
   addFile,
   getFiles,
   deleteFileRecord,
-  cleanupOldFiles,
 };

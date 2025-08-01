@@ -1,14 +1,15 @@
 import { useRef, useState } from "react";
-import axios from "axios";
+import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@supabase/auth-helpers-react";
 
 type Props = {
   onUpload: () => void;
 };
 
 export default function NewRiffRecorder({ onUpload }: Props) {
+  const user = useUser();
   const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
 
@@ -43,24 +44,28 @@ export default function NewRiffRecorder({ onUpload }: Props) {
   };
 
   const handleUpload = async () => {
-    if (!audioUrl) return;
+    if (!audioUrl || !user) return;
 
     const response = await fetch(audioUrl);
     const blob = await response.blob();
     const file = new File([blob], "newriff.webm", { type: "audio/webm" });
 
-    const formData = new FormData();
-    formData.append("username", username || "anonymous");
-    formData.append("caption", caption);
-    formData.append("file", file);
-
     setUploading(true);
     try {
-      await axios.post("http://localhost:3001/upload", formData);
+      const { data, error } = await supabase.storage
+        .from("files")
+        .upload(`${user.email}/newriff.webm`, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
       onUpload();
       setAudioUrl(null);
       setCaption("");
-      setUsername("");
     } catch (err) {
       console.error("Failed to upload new riff:", err);
     }
@@ -92,12 +97,6 @@ export default function NewRiffRecorder({ onUpload }: Props) {
       {audioUrl && (
         <div className="mt-4 space-y-3">
           <audio src={audioUrl} controls className="w-full" />
-          <input
-            className="w-full p-2 border"
-            placeholder="Your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
           <input
             className="w-full p-2 border"
             placeholder="Caption"

@@ -65,7 +65,7 @@ async function createChecklist(data, baseUrl = DEFAULT_BASE_URL) {
 
     if (entry.images && entry.images.length > 0) {
       const pageName = `images_${idx}_${Date.now()}.html`;
-      const pagePath = path.join(__dirname, 'uploads', pageName);
+      const pagePath = path.join(tempDir, pageName);
       const imgs = entry.images
         .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
         .join('\n');
@@ -78,10 +78,12 @@ async function createChecklist(data, baseUrl = DEFAULT_BASE_URL) {
     }
   });
 
-  const filePath = path.join(__dirname, 'uploads', `inspection_${Date.now()}.xlsx`);
+  const tempDir = './temp';
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+  const filePath = path.join(tempDir, `inspection_${Date.now()}.xlsx`);
   await workbook.xlsx.writeFile(filePath);
   console.log('✅ Excel generated at:', filePath);
-  return path.basename(filePath);
+  return filePath;
 }
 
 async function annotateChecklist(originalPath, data, originalName = null, baseUrl = DEFAULT_BASE_URL) {
@@ -159,7 +161,7 @@ async function annotateChecklist(originalPath, data, originalName = null, baseUr
 
         if (entry.images && entry.images.length > 0) {
           const pageName = `images_${i - 1}_${Date.now()}.html`;
-          const pagePath = path.join(__dirname, 'uploads', pageName);
+          const pagePath = path.join(tempDir, pageName);
           const imgs = entry.images
             .map((img) => `<img src="${path.basename(img)}" style="max-width:100%;margin-bottom:10px;"/>`)
             .join('\n');
@@ -179,11 +181,13 @@ async function annotateChecklist(originalPath, data, originalName = null, baseUr
 
   const date = new Date().toLocaleDateString('en-US').replace(/\//g, '-');
   const baseName = originalName ? path.basename(originalName) : path.basename(originalPath);
-  const filePath = path.join(__dirname, 'uploads', `annotated_${date}_${baseName}`);
+  const tempDir = './temp';
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+  const filePath = path.join(tempDir, `annotated_${date}_${baseName}`);
 
   await workbook.xlsx.writeFile(filePath);
   console.log('✅ Annotated Excel created at:', filePath);
-  return path.basename(filePath);
+  return filePath;
 }
 
 module.exports = { createChecklist, annotateChecklist };
