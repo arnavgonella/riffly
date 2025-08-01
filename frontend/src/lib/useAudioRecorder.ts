@@ -6,11 +6,13 @@ export interface UseAudioRecorder {
   clear(): void;
   mediaBlob: Blob | null;
   isRecording: boolean;
+  mediaStream: MediaStream | null;
 }
 
 export default function useAudioRecorder(): UseAudioRecorder {
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -19,6 +21,7 @@ export default function useAudioRecorder(): UseAudioRecorder {
     chunksRef.current = [];
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    setMediaStream(stream);
     const mr = new MediaRecorder(stream);
     recorderRef.current = mr;
 
@@ -36,7 +39,11 @@ export default function useAudioRecorder(): UseAudioRecorder {
   }, []);
 
   const stopRecording = useCallback(() => {
-    recorderRef.current?.stop();
+    if (recorderRef.current) {
+      recorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      recorderRef.current.stop();
+      setMediaStream(null);
+    }
     setIsRecording(false);
   }, []);
 
@@ -44,5 +51,5 @@ export default function useAudioRecorder(): UseAudioRecorder {
     setMediaBlob(null);
   }, []);
 
-  return { startRecording, stopRecording, clear, mediaBlob, isRecording };
+  return { startRecording, stopRecording, clear, mediaBlob, isRecording, mediaStream };
 }
